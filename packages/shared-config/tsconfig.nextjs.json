@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "es2022"],
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "incremental": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": false
+  }
+}

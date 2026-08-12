@@ -1,0 +1,34 @@
+[project]
+name = "aiwardrobe-tryon-orchestrator"
+version = "0.1.0"
+description = "FastAPI service boundary for AI Wardrobe virtual try-on orchestration."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi>=0.128.8",
+  "pydantic-settings>=2.10.1",
+  "uvicorn[standard]>=0.35.0",
+]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = ["mypy>=1.17.1", "pytest>=8.4.2", "ruff>=0.12.11"]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["app", "tests"]

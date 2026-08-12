@@ -1,0 +1,18 @@
+{
+  "extends": "@aiwardrobe/shared-config/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2023",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "incremental": true,
+    "noImplicitOverride": true
+  },
+  "include": ["src/**/*.ts"]
+}

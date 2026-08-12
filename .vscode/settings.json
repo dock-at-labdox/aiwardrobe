@@ -1,0 +1,7 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "files.exclude": { "**/.next": true, "**/node_modules": true, "**/__pycache__": true },
+  "python.analysis.typeCheckingMode": "strict",
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

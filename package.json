@@ -1,0 +1,48 @@
+{
+  "name": "aiwardrobe",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.18.2",
+  "engines": {
+    "node": ">=22 <23",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev:web": "turbo dev --filter=@aiwardrobe/web",
+    "dev:admin": "turbo dev --filter=@aiwardrobe/admin",
+    "dev:backend": "turbo dev --filter=@aiwardrobe/api",
+    "dev:vision": "(cd apps/vision-color && uv run uvicorn app.main:app --reload --port ${VISION_PORT:-8001})",
+    "dev:recommendation": "(cd apps/recommendation && uv run uvicorn app.main:app --reload --port ${RECOMMENDATION_PORT:-8002})",
+    "dev:tryon": "(cd apps/tryon-orchestrator && uv run uvicorn app.main:app --reload --port ${TRYON_PORT:-8003})",
+    "build:web": "turbo build --filter=@aiwardrobe/web",
+    "build:admin": "turbo build --filter=@aiwardrobe/admin",
+    "build": "turbo build && pnpm python:check",
+    "lint": "turbo lint && pnpm python:lint",
+    "format": "prettier --check .",
+    "format:write": "prettier --write .",
+    "typecheck": "turbo typecheck && pnpm python:typecheck",
+    "test": "turbo test && pnpm python:test",
+    "contracts:validate": "pnpm --filter @aiwardrobe/shared-schemas validate",
+    "python:sync": "(cd apps/vision-color && uv sync --locked) && (cd apps/recommendation && uv sync --locked) && (cd apps/tryon-orchestrator && uv sync --locked)",
+    "python:lint": "(cd apps/vision-color && uv run ruff check .) && (cd apps/recommendation && uv run ruff check .) && (cd apps/tryon-orchestrator && uv run ruff check .)",
+    "python:typecheck": "(cd apps/vision-color && uv run mypy app tests) && (cd apps/recommendation && uv run mypy app tests) && (cd apps/tryon-orchestrator && uv run mypy app tests)",
+    "python:test": "(cd apps/vision-color && uv run pytest) && (cd apps/recommendation && uv run pytest) && (cd apps/tryon-orchestrator && uv run pytest)",
+    "python:check": "(cd apps/vision-color && uv build) && (cd apps/recommendation && uv build) && (cd apps/tryon-orchestrator && uv build)",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
+    "@eslint/eslintrc": "3.3.1",
+    "@eslint/js": "9.35.0",
+    "eslint": "9.35.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.5",
+    "prettier": "3.6.2",
+    "turbo": "2.10.7",
+    "typescript-eslint": "8.42.0"
+  },
+  "lint-staged": {
+    "*.{js,cjs,mjs,ts,tsx,json,md,yml,yaml}": "prettier --write"
+  }
+}

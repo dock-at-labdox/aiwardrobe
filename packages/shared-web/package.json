@@ -1,0 +1,33 @@
+{
+  "name": "@aiwardrobe/shared-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src --max-warnings=0",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.87.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@aiwardrobe/shared-config": "workspace:*",
+    "@tanstack/react-query": "5.87.4",
+    "@types/node": "24.3.1",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "typescript": "5.9.2",
+    "zod": "4.1.5"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.aiwardrobe.example/events/job-request/1.0.0",
+  "title": "Async job request envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "schemaVersion",
+    "correlationId",
+    "idempotencyKey",
+    "tenantId",
+    "occurredAt",
+    "payload"
+  ],
+  "properties": {
+    "eventId": { "type": "string" },
+    "schemaVersion": { "type": "string", "pattern": "^1\\." },
+    "correlationId": { "type": "string" },
+    "idempotencyKey": { "type": "string" },
+    "tenantId": { "type": "string" },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "payload": { "type": "object" }
+  }
+}

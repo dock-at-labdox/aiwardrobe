@@ -1,0 +1,40 @@
+{
+  "name": "@aiwardrobe/api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "API_PORT=${API_PORT:-4000} nest start",
+    "start:dev": "API_PORT=${API_PORT:-4000} nest start --watch",
+    "dev": "API_PORT=${API_PORT:-4000} nest start --watch",
+    "build": "nest build",
+    "lint": "eslint src --max-warnings=0",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "typecheck": "tsc --noEmit",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.1.6",
+    "@nestjs/config": "4.0.2",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-express": "11.1.6",
+    "@nestjs/swagger": "11.2.0",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.14.2",
+    "joi": "18.0.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2",
+    "@prisma/client": "6.16.2"
+  },
+  "devDependencies": {
+    "@aiwardrobe/shared-config": "workspace:*",
+    "@nestjs/cli": "11.0.10",
+    "@nestjs/testing": "11.1.6",
+    "@types/express": "5.0.3",
+    "@types/jest": "30.0.0",
+    "jest": "30.1.3",
+    "ts-jest": "29.4.1",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.2",
+    "prisma": "6.16.2"
+  }
+}
