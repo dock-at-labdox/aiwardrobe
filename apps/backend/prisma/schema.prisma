@@ -1,3 +1,6 @@
+// AttireIQ — apps/backend/prisma/schema.prisma
+// Draft — for review before migration.
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -5,4 +8,579 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum ConsentPurpose {
+  WARDROBE
+  PERSONALIZATION
+  TRYON
+  ANALYTICS
+}
+
+enum ConsentStatus {
+  GRANTED
+  REVOKED
+}
+
+enum PresentationStyle {
+  MASCULINE
+  FEMININE
+  ANDROGYNOUS
+  MIXED
+  CUSTOM
+}
+
+enum WardrobeCategory {
+  TOP
+  BOTTOM
+  LAYER
+  DRESS
+  FOOTWEAR
+  BELT
+  BAG
+  TIE_SCARF
+  JEWELRY
+  OTHER
+}
+
+enum WardrobeStatus {
+  ACTIVE
+  LAUNDRY
+  TAILORING
+  PACKED
+  LENT
+  ARCHIVED
+  DONATED
+}
+
+enum CalibrationMode {
+  QUICK
+  CONFIRMED
+  REFERENCE_CARD
+  MANUAL
+  MULTI_PHOTO
+}
+
+enum OccasionType {
+  CLIENT_MEETING
+  BOARD_MEETING
+  INTERVIEW
+  PRESENTATION
+  NETWORKING
+  BUSINESS_DINNER
+  CONFERENCE
+  OFFICE_DAY
+  CUSTOM
+}
+
+enum OutfitStrategy {
+  SAFE
+  BALANCED
+  DISTINCTIVE
+}
+
+enum SavedLookStatus {
+  SAVED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum TryOnStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REJECTED
+}
+
+enum FeedbackTargetType {
+  OUTFIT
+  TRYON_RESULT
+  RECOMMENDATION
+}
+
+enum BillingStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+enum JobType {
+  VISION_COLOR
+  FLATLAY
+  VTO
+  RETENTION_EXPORT
+  ANALYTICS_OUTBOX
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  DEAD_LETTERED
+}
+
+enum MediaAssetType {
+  WARDROBE_RAW
+  WARDROBE_CORRECTED
+  WARDROBE_CUTOUT
+  TRYON_SOURCE
+  TRYON_RESULT
+}
+
+enum ModerationStatus {
+  PENDING
+  PASSED
+  FLAGGED
+  REJECTED
+}
+
+enum ImageProcessingStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}
+
+enum AuthProvider {
+  OIDC
+  EMAIL_PASSWORD
+  GOOGLE
+  APPLE
+}
+
+// ---------- Core user & consent ----------
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  locale           String   @default("en")
+  timezone         String?
+  isAdultConfirmed Boolean  @default(false) @map("is_adult_confirmed")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  authIdentities AuthIdentity[]
+  consents       Consent[]
+  styleProfile   StyleProfile?
+  bodyProfile    BodyProfile?
+  wardrobeItems  WardrobeItem[]
+  occasions      Occasion[]
+  outfits        Outfit[]
+  savedLooks     SavedLook[]
+  wearEvents     WearEvent[]
+  tryOnRequests  TryOnRequest[]
+  feedback       Feedback[]
+  subscription   Subscription?
+  quotaLedger    QuotaLedgerEntry[]
+  auditEvents    AuditEvent[]       @relation("ActorUser")
+  mediaAssets    MediaAsset[]
+
+  @@map("users")
+}
+
+model AuthIdentity {
+  id                String       @id @default(uuid())
+  userId            String       @map("user_id")
+  provider          AuthProvider
+  providerSubjectId String       @map("provider_subject_id")
+  createdAt         DateTime     @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerSubjectId])
+  @@index([userId])
+  @@map("auth_identities")
+}
+
+model Consent {
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
+  purpose   ConsentPurpose
+  status    ConsentStatus
+  version   Int            @default(1)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  tryOnRequests TryOnRequest[]
+
+  @@index([userId, purpose, createdAt])
+  @@map("consents")
+}
+
+// ---------- Profiles ----------
+
+model StyleProfile {
+  id                String            @id @default(uuid())
+  userId            String            @unique @map("user_id")
+  presentationStyle PresentationStyle @map("presentation_style")
+  industries        String[]
+  formalityDefault  String?           @map("formality_default")
+  fitPreferences    Json?             @map("fit_preferences")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("style_profiles")
+}
+
+model BodyProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  heightCm        Int?     @map("height_cm")
+  buildDescriptor String?  @map("build_descriptor")
+  undertone       String?
+  source          String
+  userConfirmed   Boolean  @default(false) @map("user_confirmed")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("body_profiles")
+}
+
+// ---------- Media ----------
+
+model MediaAsset {
+  id               String           @id @default(uuid())
+  userId           String           @map("user_id")
+  assetType        MediaAssetType   @map("asset_type")
+  objectKey        String           @map("object_key")
+  hash             String?
+  deviceMetadata   Json?            @map("device_metadata")
+  retentionClass   String?          @map("retention_class")
+  moderationStatus ModerationStatus @default(PENDING) @map("moderation_status")
+  expiresAt        DateTime?        @map("expires_at")
+  deletedAt        DateTime?        @map("deleted_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  itemImagesRaw       ItemImage[]    @relation("RawAsset")
+  itemImagesCorrected ItemImage[]    @relation("CorrectedAsset")
+  itemImagesCutout    ItemImage[]    @relation("CutoutAsset")
+  tryOnSourceFor      TryOnRequest[] @relation("SourceAsset")
+  tryOnResultFor      TryOnResult[]  @relation("ResultAsset")
+
+  @@index([userId, assetType])
+  @@map("media_assets")
+}
+
+// ---------- Wardrobe ----------
+
+model WardrobeItem {
+  id         String           @id @default(uuid())
+  userId     String           @map("user_id")
+  category   WardrobeCategory
+  subtype    String?
+  name       String?
+  status     WardrobeStatus   @default(ACTIVE)
+  attributes Json?
+  wearCount  Int              @default(0) @map("wear_count")
+  deletedAt  DateTime?        @map("deleted_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  images        ItemImage[]
+  colorProfiles ColorProfile[]
+  outfitItems   OutfitItem[]
+  embedding     ItemEmbedding?
+
+  @@index([userId, status])
+  @@map("wardrobe_items")
+}
+
+model ItemImage {
+  id               String                @id @default(uuid())
+  wardrobeItemId   String                @map("wardrobe_item_id")
+  rawAssetId       String                @map("raw_asset_id")
+  correctedAssetId String?               @map("corrected_asset_id")
+  cutoutAssetId    String?               @map("cutout_asset_id")
+  processingStatus ImageProcessingStatus @default(PENDING) @map("processing_status")
+  createdAt        DateTime              @default(now()) @map("created_at")
+
+  item           WardrobeItem @relation(fields: [wardrobeItemId], references: [id])
+  rawAsset       MediaAsset   @relation("RawAsset", fields: [rawAssetId], references: [id])
+  correctedAsset MediaAsset?  @relation("CorrectedAsset", fields: [correctedAssetId], references: [id])
+  cutoutAsset    MediaAsset?  @relation("CutoutAsset", fields: [cutoutAssetId], references: [id])
+
+  @@map("item_images")
+}
+
+model ColorProfile {
+  id              String          @id @default(uuid())
+  wardrobeItemId  String          @map("wardrobe_item_id")
+  dominantLab     Json            @map("dominant_lab")
+  secondaryLab    Json?           @map("secondary_lab")
+  semanticFamily  String          @map("semantic_family")
+  semanticShade   String          @map("semantic_shade")
+  confidence      Float
+  calibrationMode CalibrationMode @map("calibration_mode")
+  userConfirmed   Boolean         @default(false) @map("user_confirmed")
+  isCurrent       Boolean         @default(true) @map("is_current")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  item WardrobeItem @relation(fields: [wardrobeItemId], references: [id])
+
+  // Add a PostgreSQL partial unique index in the migration:
+  // CREATE UNIQUE INDEX one_current_color_profile_per_item
+  // ON color_profiles (wardrobe_item_id)
+  // WHERE is_current = true;
+
+  @@index([wardrobeItemId, isCurrent])
+  @@map("color_profiles")
+}
+
+model ItemEmbedding {
+  id             String   @id @default(uuid())
+  wardrobeItemId String   @unique @map("wardrobe_item_id")
+  modelVersion   String   @map("model_version")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  item WardrobeItem @relation(fields: [wardrobeItemId], references: [id])
+
+  @@map("item_embeddings")
+}
+
+// ---------- Occasions & recommendations ----------
+
+model Occasion {
+  id                  String       @id @default(uuid())
+  userId              String       @map("user_id")
+  type                OccasionType
+  datetime            DateTime
+  audience            String?
+  industry            String?
+  impressionPrimary   String?      @map("impression_primary")
+  impressionSecondary String?      @map("impression_secondary")
+  requiredItemIds     String[]     @map("required_item_ids")
+  excludedItemIds     String[]     @map("excluded_item_ids")
+  constraints         Json?
+  archivedAt          DateTime?    @map("archived_at")
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id])
+  outfits Outfit[]
+
+  @@index([userId, archivedAt])
+  @@map("occasions")
+}
+
+model Outfit {
+  id                 String         @id @default(uuid())
+  occasionId         String         @map("occasion_id")
+  userId             String         @map("user_id")
+  strategyLabel      OutfitStrategy @map("strategy_label")
+  overallScore       Float          @map("overall_score")
+  scoreBreakdown     Json?          @map("score_breakdown")
+  explanation        Json?
+  rulesetVersion     String         @map("ruleset_version")
+  modelVersion       String         @map("model_version")
+  colorEngineVersion String         @map("color_engine_version")
+  createdAt          DateTime       @default(now()) @map("created_at")
+
+  occasion      Occasion       @relation(fields: [occasionId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+  outfitItems   OutfitItem[]
+  savedLooks    SavedLook[]
+  tryOnRequests TryOnRequest[]
+
+  @@map("outfits")
+}
+
+model OutfitItem {
+  id                  String @id @default(uuid())
+  outfitId            String @map("outfit_id")
+  wardrobeItemId      String @map("wardrobe_item_id")
+  itemVersionSnapshot Json   @map("item_version_snapshot")
+  slot                String
+  sortOrder           Int    @default(0) @map("sort_order")
+
+  outfit Outfit       @relation(fields: [outfitId], references: [id])
+  item   WardrobeItem @relation(fields: [wardrobeItemId], references: [id])
+
+  @@map("outfit_items")
+}
+
+// ---------- Planner ----------
+
+model SavedLook {
+  id        String          @id @default(uuid())
+  outfitId  String          @map("outfit_id")
+  userId    String          @map("user_id")
+  title     String?
+  status    SavedLookStatus @default(SAVED)
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  outfit     Outfit      @relation(fields: [outfitId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  wearEvents WearEvent[]
+
+  @@map("saved_looks")
+}
+
+model WearEvent {
+  id          String   @id @default(uuid())
+  savedLookId String   @map("saved_look_id")
+  userId      String   @map("user_id")
+  wornAt      DateTime @map("worn_at") @db.Date
+  audienceKey String?  @map("audience_key")
+  rating      Int?
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  savedLook SavedLook @relation(fields: [savedLookId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("wear_events")
+}
+
+// ---------- Try-on ----------
+
+model TryOnRequest {
+  id             String      @id @default(uuid())
+  userId         String      @map("user_id")
+  outfitId       String      @map("outfit_id")
+  sourceAssetId  String      @map("source_asset_id")
+  provider       String
+  status         TryOnStatus @default(PENDING)
+  idempotencyKey String      @unique @map("idempotency_key")
+  consentId      String      @map("consent_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  outfit      Outfit       @relation(fields: [outfitId], references: [id])
+  sourceAsset MediaAsset   @relation("SourceAsset", fields: [sourceAssetId], references: [id])
+  consent     Consent      @relation(fields: [consentId], references: [id])
+  result      TryOnResult?
+
+  @@map("tryon_requests")
+}
+
+model TryOnResult {
+  id                 String   @id @default(uuid())
+  tryOnRequestId     String   @unique @map("tryon_request_id")
+  resultAssetId      String?  @map("result_asset_id")
+  qualityGateResults Json     @map("quality_gate_results")
+  billed             Boolean  @default(false)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  request     TryOnRequest @relation(fields: [tryOnRequestId], references: [id])
+  resultAsset MediaAsset?  @relation("ResultAsset", fields: [resultAssetId], references: [id])
+
+  @@map("tryon_results")
+}
+
+// ---------- Feedback ----------
+
+model Feedback {
+  id         String             @id @default(uuid())
+  userId     String             @map("user_id")
+  targetType FeedbackTargetType @map("target_type")
+  targetId   String             @map("target_id")
+  reason     String
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("feedback")
+}
+
+// ---------- Billing ----------
+
+model Subscription {
+  id                     String        @id @default(uuid())
+  userId                 String        @unique @map("user_id")
+  plan                   String
+  billingStatus          BillingStatus @default(ACTIVE) @map("billing_status")
+  provider               String
+  providerSubscriptionId String?       @map("provider_subscription_id")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model QuotaLedgerEntry {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  resourceType String   @map("resource_type")
+  delta        Int
+  reason       String
+  referenceId  String?  @map("reference_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("quota_ledger")
+}
+
+// ---------- Async infrastructure ----------
+
+// entityId meaning depends on jobType:
+//
+// VISION_COLOR     -> item_image_id
+// FLATLAY          -> outfit_id
+// VTO              -> tryon_request_id
+// RETENTION_EXPORT -> user_id or export request ID
+// ANALYTICS_OUTBOX -> outbox_event_id
+
+model ProcessingJob {
+  id             String    @id @default(uuid())
+  jobType        JobType   @map("job_type")
+  entityId       String    @map("entity_id")
+  idempotencyKey String    @unique @map("idempotency_key")
+  status         JobStatus @default(QUEUED)
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3) @map("max_attempts")
+  startedAt      DateTime? @map("started_at")
+  timeoutAt      DateTime? @map("timeout_at")
+  correlationId  String    @map("correlation_id")
+  lastError      String?   @map("last_error")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([status, timeoutAt])
+  @@map("processing_jobs")
+}
+
+model OutboxEvent {
+  id            String    @id @default(uuid())
+  eventType     String    @map("event_type")
+  payload       Json
+  schemaVersion String    @map("schema_version")
+  correlationId String    @map("correlation_id")
+  publishedAt   DateTime? @map("published_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([publishedAt])
+  @@index([correlationId])
+  @@map("outbox_events")
+}
+
+// ---------- Audit ----------
+
+model AuditEvent {
+  id            String   @id @default(uuid())
+  actorUserId   String?  @map("actor_user_id")
+  action        String
+  objectType    String   @map("object_type")
+  objectId      String   @map("object_id")
+  metadata      Json?
+  correlationId String   @map("correlation_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("ActorUser", fields: [actorUserId], references: [id])
+
+  @@map("audit_events")
 }
