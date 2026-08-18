@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "PORT=${WEB_PORT:-3000} next dev",
+    "dev": "node ../../scripts/run.mjs --port-var WEB_PORT --port-default 3000 -- next dev",
     "build": "next build",
-    "start": "PORT=${WEB_PORT:-3000} next start",
+    "start": "node ../../scripts/run.mjs --port-var WEB_PORT --port-default 3000 -- next start",
     "lint": "eslint src --max-warnings=0",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit",

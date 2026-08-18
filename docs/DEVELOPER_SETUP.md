@@ -57,10 +57,15 @@ analysis, and hide generated folders such as `node_modules`, `.next`, and `__pyc
 
 ### Operating-system notes
 
-- macOS and Linux work directly with the documented commands.
-- Windows developers should use WSL2 with a Linux distribution. The current package
-  scripts use POSIX shell syntax such as `${WEB_PORT:-3000}` and `cd ... && ...`, which
-  does not run directly in Command Prompt or standard PowerShell.
+- macOS, Linux, and native Windows (Command Prompt or PowerShell) all work directly with
+  the documented commands — WSL2, Git Bash, and manually installed global tools are not
+  required. Package scripts that need a configurable port or a working directory change
+  (Web, Admin, and the three Python services) delegate to `node scripts/run.mjs`, a
+  small cross-platform helper, instead of POSIX-only shell syntax like `${VAR:-default}`
+  or `(cd dir && cmd)`.
+- Setting an env var override at the terminal still differs by shell: macOS/Linux use
+  `WEB_PORT=3010 pnpm dev:web`; Windows CMD uses `set WEB_PORT=3010 && pnpm dev:web`;
+  Windows PowerShell uses `$env:WEB_PORT=3010; pnpm dev:web`.
 - Do not commit `.env`, `.venv`, generated build output, or editor-local files. They are
   ignored by `.gitignore`.
 
@@ -117,6 +122,10 @@ cp apps/vision-color/.env.example apps/vision-color/.env
 cp apps/recommendation/.env.example apps/recommendation/.env
 cp apps/tryon-orchestrator/.env.example apps/tryon-orchestrator/.env
 ```
+
+`cp` works as shown on macOS/Linux and in Windows PowerShell (a built-in alias for
+`Copy-Item`). In Windows Command Prompt, use `copy` instead, e.g.
+`copy apps\web\.env.example apps\web\.env`.
 
 Each `.env` is ignored by Git and loaded automatically by that app's own
 tooling (Next.js's per-directory env loading, NestJS's `ConfigModule`, and
@@ -336,10 +345,18 @@ Another process is already listening on the port. Stop that process, or set the 
 port variable before starting the service. For example:
 
 ```sh
+# macOS/Linux
 WEB_PORT=3010 pnpm dev:web
+
+# Windows (Command Prompt)
+set WEB_PORT=3010 && pnpm dev:web
+
+# Windows (PowerShell)
+$env:WEB_PORT=3010; pnpm dev:web
 ```
 
-Use `lsof -nP -iTCP:3000 -sTCP:LISTEN` on macOS/Linux to identify a process using port 3000. On Windows/WSL, use the equivalent Linux command inside WSL.
+Use `lsof -nP -iTCP:3000 -sTCP:LISTEN` on macOS/Linux to identify a process using port 3000. On Windows, use `netstat -ano | findstr :3000` (Command Prompt) or
+`Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess` (PowerShell).
 
 ### Node version mismatch
 

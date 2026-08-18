@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "API_PORT=${API_PORT:-4000} nest start",
-    "start:dev": "API_PORT=${API_PORT:-4000} nest start --watch",
-    "dev": "API_PORT=${API_PORT:-4000} nest start --watch",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
     "build": "nest build",
     "lint": "eslint src --max-warnings=0",
     "format": "prettier --check . --ignore-path ../../.gitignore",

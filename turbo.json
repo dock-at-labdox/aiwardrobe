@@ -8,7 +8,8 @@
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["WEB_PORT", "ADMIN_PORT", "API_PORT"]
     },
     "lint": {},
     "format": {},
