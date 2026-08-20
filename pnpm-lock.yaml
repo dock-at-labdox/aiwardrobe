@@ -228,6 +228,10 @@ importers:
         version: 5.9.2
 
   packages/shared-web:
+    dependencies:
+      '@aiwardrobe/shared-schemas':
+        specifier: workspace:*
+        version: link:../shared-schemas
     devDependencies:
       '@aiwardrobe/shared-config':
         specifier: workspace:*
