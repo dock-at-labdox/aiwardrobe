@@ -5,6 +5,7 @@ export type TokenProvider = () => Promise<string | undefined>;
 export interface ApiRequestOptions {
   headers?: HeadersInit;
   signal?: AbortSignal;
+  idempotencyKey?: string;
 }
 
 export interface ApiClientOptions {
@@ -69,20 +70,32 @@ export class ApiClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    if (method !== 'GET') {
-      headers.set('Idempotency-Key', crypto.randomUUID());
+    if (method !== 'GET' && options.idempotencyKey) {
+      headers.set('Idempotency-Key', options.idempotencyKey);
     }
 
     if (options.body !== undefined) {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers,
-      signal: options.signal,
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    });
+    let response: Response;
+
+    try {
+      response = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers,
+        signal: options.signal,
+        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      });
+    } catch {
+      throw {
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Unable to connect. Please check your internet connection.',
+          correlation_id: correlationId,
+        },
+      } satisfies ErrorEnvelope;
+    }
 
     if (!response.ok) {
       throw await this.parseError(response, correlationId);

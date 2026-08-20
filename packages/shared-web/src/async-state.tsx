@@ -1,8 +1,9 @@
+import type { ErrorEnvelope } from '@aiwardrobe/shared-schemas';
 import { ReactNode } from 'react';
 
 export interface AsyncStateProps {
   loading?: boolean;
-  error?: string | null;
+  error?: ErrorEnvelope | null;
   empty?: boolean;
   loadingMessage?: string;
   errorMessage?: string;
@@ -28,7 +29,7 @@ export function AsyncState({
   }
 
   if (error) {
-    return <section role="alert">{error || errorMessage}</section>;
+    return <section role="alert">{error.error.message || errorMessage}</section>;
   }
 
   if (empty) {
