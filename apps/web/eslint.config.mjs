@@ -1,13 +1,9 @@
-import { FlatCompat } from '@eslint/eslintrc';
-import baseConfig from '@aiwardrobe/shared-config/eslint.base.mjs';
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 
 export default [
-  ...baseConfig,
-  ...compat.config({
-    extends: ['next/core-web-vitals', 'next/typescript'],
-  }),
+  ...nextCoreWebVitals,
+  {
+    ignores: ['**/dist/**', '**/generated/**'],
+    rules: { '@typescript-eslint/no-explicit-any': 'error' },
+  },
 ];
