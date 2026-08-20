@@ -1,6 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function SignInForm() {
   const [email, setEmail] = useState<string>('');
@@ -55,13 +59,12 @@ export default function SignInForm() {
           Email
         </label>
 
-        <input
+        <Input
           id="email"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-md border px-3 py-2"
         />
       </div>
 
@@ -70,29 +73,24 @@ export default function SignInForm() {
           Password
         </label>
 
-        <input
+        <Input
           id="password"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Enter your password"
-          className="w-full rounded-md border px-3 py-2"
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-md bg-black px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Signing in...' : 'Sign in'}
-      </button>
+      </Button>
 
       <p className="text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <a href="/sign-up" className="font-medium text-black underline">
+        Don&apos;t have an account?{' '}
+        <Link href="/sign-up" className="font-medium text-black underline">
           Sign up
-        </a>
+        </Link>
       </p>
     </form>
   );

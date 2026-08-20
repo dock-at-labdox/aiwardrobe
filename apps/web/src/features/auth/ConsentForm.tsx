@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+
 type ConsentState = {
   wardrobeProcessing: boolean;
   personalization: boolean;
@@ -19,6 +22,7 @@ export default function ConsentForm() {
 
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [saved, setSaved] = useState<boolean>(false);
 
   function handleToggle(purpose: keyof ConsentState) {
     setConsents((current) => ({
@@ -27,11 +31,13 @@ export default function ConsentForm() {
     }));
 
     setError('');
+    setSaved(false);
   }
 
   async function handleSave() {
     setLoading(true);
     setError('');
+    setSaved(false);
 
     try {
       // Backend API will be connected later.
@@ -40,6 +46,7 @@ export default function ConsentForm() {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       console.log('Current consent state:', consents);
+      setSaved(true);
     } catch {
       setError('Unable to save your consent settings. Please try again.');
     } finally {
@@ -63,6 +70,15 @@ export default function ConsentForm() {
           className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700"
         >
           {error}
+        </div>
+      )}
+
+      {saved && (
+        <div
+          role="status"
+          className="rounded-md border border-green-300 bg-green-50 p-3 text-sm text-green-700"
+        >
+          Saved
         </div>
       )}
 
@@ -96,14 +112,9 @@ export default function ConsentForm() {
         />
       </div>
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={loading}
-        className="w-full rounded-md bg-black px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
-      >
+      <Button type="button" onClick={handleSave} disabled={loading} className="w-full">
         {loading ? 'Saving...' : 'Save preferences'}
-      </button>
+      </Button>
     </section>
   );
 }
@@ -118,7 +129,7 @@ type ConsentItemProps = {
 function ConsentItem({ title, description, checked, onChange }: ConsentItemProps) {
   return (
     <label className="flex cursor-pointer items-start gap-3 rounded-md border p-4">
-      <input type="checkbox" checked={checked} onChange={onChange} className="mt-1 h-4 w-4" />
+      <Checkbox checked={checked} onCheckedChange={onChange} className="mt-1" />
 
       <div>
         <p className="font-medium">{title}</p>
