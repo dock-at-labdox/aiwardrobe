@@ -1,5 +1,18 @@
 import type { ErrorEnvelope } from '@aiwardrobe/shared-schemas';
 
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 250;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function shouldRetry(
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  idempotencyKey?: string,
+): boolean {
+  return method === 'GET' || Boolean(idempotencyKey);
+}
+
 export type TokenProvider = () => Promise<string | undefined>;
 
 export interface ApiRequestOptions {
@@ -78,34 +91,53 @@ export class ApiClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    let response: Response;
+    const canRetry = shouldRetry(method, options.idempotencyKey);
 
-    try {
-      response = await fetch(`${this.baseUrl}${path}`, {
-        method,
-        headers,
-        signal: options.signal,
-        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-      });
-    } catch {
-      throw {
-        error: {
-          code: 'NETWORK_ERROR',
-          message: 'Unable to connect. Please check your internet connection.',
-          correlation_id: correlationId,
-        },
-      } satisfies ErrorEnvelope;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+      let response: Response;
+
+      try {
+        response = await fetch(`${this.baseUrl}${path}`, {
+          method,
+          headers,
+          signal: options.signal,
+          body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        });
+      } catch {
+        if (!canRetry || attempt === MAX_RETRIES) {
+          throw {
+            error: {
+              code: 'NETWORK_ERROR',
+              message: 'Unable to connect. Please check your internet connection.',
+              correlation_id: correlationId,
+              retryable: canRetry,
+            },
+          } satisfies ErrorEnvelope;
+        }
+
+        await sleep(INITIAL_RETRY_DELAY_MS * 2 ** attempt);
+        continue;
+      }
+
+      if (!response.ok) {
+        const error = await this.parseError(response, correlationId);
+
+        if (!canRetry || !error.error.retryable || attempt === MAX_RETRIES) {
+          throw error;
+        }
+
+        await sleep(INITIAL_RETRY_DELAY_MS * 2 ** attempt);
+        continue;
+      }
+
+      if (response.status === 204) {
+        return undefined as T;
+      }
+
+      return (await response.json()) as T;
     }
 
-    if (!response.ok) {
-      throw await this.parseError(response, correlationId);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return (await response.json()) as T;
+    throw new Error('Request retry loop exited unexpectedly');
   }
 
   private async parseError(response: Response, correlationId: string): Promise<ErrorEnvelope> {
