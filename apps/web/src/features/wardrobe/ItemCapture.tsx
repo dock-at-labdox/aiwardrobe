@@ -195,12 +195,7 @@ export default function ItemCapture() {
 
         {/* Main Card */}
         <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
-          <AsyncState
-            loading={isUploading}
-            error={uploadError}
-            loadingMessage="Uploading your garment..."
-            errorMessage="Upload failed. Please try again."
-          >
+          <AsyncState loading={isUploading} error={null} loadingMessage="Uploading your garment...">
             {!previewUrl ? (
               <>
                 {/* Upload Area */}
