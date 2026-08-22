@@ -4,11 +4,11 @@ import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import type { ErrorEnvelope } from '@aiwardrobe/shared-web';
+import { ApiClient, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
 import { Button } from '@/components/ui/button';
 import { AsyncState } from '@aiwardrobe/shared-web';
-import { MOCK_WARDROBE_ITEMS, type WardrobeItem } from './mock-data';
+import type { WardrobeItem } from './mock-data';
 
 export default function WardrobeList() {
   const [items, setItems] = useState<WardrobeItem[]>([]);
@@ -17,12 +17,20 @@ export default function WardrobeList() {
   const [category, setCategory] = useState('All');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setItems(MOCK_WARDROBE_ITEMS);
-      setLoading(false);
-    }, 300);
+    const apiClient = new ApiClient();
 
-    return () => clearTimeout(timer);
+    apiClient
+      .get<{ items: WardrobeItem[] }>('/v1/wardrobe/items')
+      .then((response) => {
+        setItems(response.items);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err as ErrorEnvelope);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const categories = useMemo(
