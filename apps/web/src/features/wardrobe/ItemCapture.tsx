@@ -21,7 +21,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 // Change to true when you want to test the low-confidence error state.
 const MOCK_LOW_COLOR_CONFIDENCE = false;
 
-const apiClient = new ApiClient('/api/mock');
+const apiClient = new ApiClient('');
 
 function createErrorEnvelope(code: string, message: string): ErrorEnvelope {
   return {
@@ -33,33 +33,12 @@ function createErrorEnvelope(code: string, message: string): ErrorEnvelope {
   };
 }
 
-async function createMockUploadSession(file: File): Promise<MockUploadSession> {
-  const originalFetch = globalThis.fetch;
-
-  globalThis.fetch = async () =>
-    new Response(
-      JSON.stringify({
-        uploadUrl: 'mock://wardrobe/upload',
-        itemId: crypto.randomUUID(),
-        fileName: file.name,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-  try {
-    return await apiClient.post<MockUploadSession>('/wardrobe/upload', {
-      fileName: file.name,
-      fileSize: file.size,
-      contentType: file.type,
-    });
-  } finally {
-    globalThis.fetch = originalFetch;
-  }
+async function createUploadSession(file: File): Promise<MockUploadSession> {
+  return apiClient.post<MockUploadSession>('/v1/wardrobe/uploads/sessions', {
+    fileName: file.name,
+    fileSize: file.size,
+    contentType: file.type,
+  });
 }
 
 export default function ItemCapture() {
@@ -144,7 +123,7 @@ export default function ItemCapture() {
     setUploadSuccess(false);
 
     try {
-      const session = await createMockUploadSession(selectedFile);
+      const session = await createUploadSession(selectedFile);
 
       console.log('Mock upload completed:', {
         itemId: session.itemId,
