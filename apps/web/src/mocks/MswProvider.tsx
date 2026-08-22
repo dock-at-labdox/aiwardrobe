@@ -12,7 +12,6 @@ export default function MswProvider({ children }: { children: React.ReactNode })
       process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_API_MOCKING !== 'disabled';
 
     if (!shouldMock || started) {
-      setReady(true);
       return;
     }
 
@@ -23,7 +22,7 @@ export default function MswProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
-  if (!ready) return null;
+  if (!ready && process.env.NODE_ENV === 'development') return null;
 
   return <>{children}</>;
 }
