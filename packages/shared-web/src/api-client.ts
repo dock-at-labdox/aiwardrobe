@@ -150,6 +150,7 @@ export class ApiClient {
           message: body.error?.message ?? (response.statusText || 'Request failed'),
           correlation_id: body.error?.correlation_id ?? correlationId,
           details: body.error?.details,
+          retryable: body.error?.retryable,
         },
       };
     } catch {
