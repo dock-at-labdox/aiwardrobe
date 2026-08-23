@@ -9,12 +9,16 @@
     "lint": "eslint src --max-warnings=0",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "dev:windows": "next dev --webpack",
+    "build:windows": "next build --webpack"
   },
   "dependencies": {
+    "@aiwardrobe/shared-schemas": "workspace:*",
     "@aiwardrobe/shared-web": "workspace:*",
     "@base-ui/react": "^1.7.0",
     "@tanstack/react-query": "5.87.4",
+    "@tanstack/react-virtual": "^3.14.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.33.0",
@@ -35,7 +39,13 @@
     "@types/react": "19.1.12",
     "@types/react-dom": "19.1.9",
     "eslint-config-next": "16.3.1",
+    "msw": "^2.15.0",
     "typescript": "5.9.2",
     "vitest": "3.2.4"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
