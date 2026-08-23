@@ -5,11 +5,11 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import type { ErrorEnvelope } from '@aiwardrobe/shared-web';
-import { AsyncState } from '@aiwardrobe/shared-web';
+import { ApiClient, AsyncState } from '@aiwardrobe/shared-web';
 
 import { Button } from '@/components/ui/button';
 
-import { MOCK_WARDROBE_ITEMS, type WardrobeItem } from '../../../../features/wardrobe/mock-data';
+import type { WardrobeItem } from '../../../../features/wardrobe/mock-data';
 
 export default function WardrobeDetailPage() {
   const params = useParams<{ id: string }>();
@@ -22,25 +22,21 @@ export default function WardrobeDetailPage() {
   const [selectedColor, setSelectedColor] = useState('');
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const foundItem = MOCK_WARDROBE_ITEMS.find((wardrobeItem) => wardrobeItem.id === params.id);
+    const apiClient = new ApiClient();
 
-      if (!foundItem) {
-        setError({
-          error: {
-            code: 'WARDROBE_ITEM_NOT_FOUND',
-            message: 'We could not find this wardrobe item.',
-          },
-        });
-      } else {
+    apiClient
+      .get<WardrobeItem>(`/v1/wardrobe/items/${params.id}`)
+      .then((foundItem) => {
         setItem(foundItem);
         setSelectedColor(foundItem.color);
-      }
-
-      setLoading(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
+        setError(null);
+      })
+      .catch((err) => {
+        setError(err as ErrorEnvelope);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [params.id]);
   function handleConfirmColor() {
     if (!item) {
