@@ -10,12 +10,14 @@ pairs. Produces an embedding directly from the garment cutout image.
 Marqo-FashionCLIP is a newer, faster variant of the original.
 
 Pros:
+
 - Learns directly from visual appearance, catching things attribute
   labels might miss (texture, drape, subtle pattern)
 - Open weight, self-hostable, no per-request API cost
 - Well established in fashion ML literature specifically
 
 Cons:
+
 - Needs the garment cutout image at inference time, an extra
   dependency on the media service rather than just structured data
 - Fine-tuned on long descriptive captions, may be biased toward
@@ -32,6 +34,7 @@ silhouette, which vision-color will already provide as structured
 fields.
 
 Pros:
+
 - Does not need the raw image at all, only the structured attributes
   this service already receives
 - Much smaller and cheaper to run at our scale
@@ -39,6 +42,7 @@ Pros:
   when a score looks wrong
 
 Cons:
+
 - Loses any visual nuance not captured in the structured attributes
 - Compatibility quality depends entirely on how good and complete the
   attribute extraction from vision-color turns out to be
