@@ -18,7 +18,12 @@ requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [dependency-groups]
-dev = ["mypy>=1.17.1", "pytest>=8.4.2", "ruff>=0.12.11"]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=1.17.1",
+    "pytest>=8.4.2",
+    "ruff>=0.12.11",
+]
 
 [tool.setuptools.packages.find]
 include = ["app*"]

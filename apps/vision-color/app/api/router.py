@@ -24,5 +24,12 @@ async def remove_background_endpoint(
     if not image_bytes:
         raise HTTPException(status_code=400, detail="Uploaded image is empty.")
 
-    cutout = remove_background(image_bytes)
+    try:
+        cutout = remove_background(image_bytes)
+    except Exception as exc:  # rembg/PIL raise on corrupt or unsupported images
+        raise HTTPException(
+            status_code=400,
+            detail="Could not process the image. It may be corrupt or unsupported.",
+        ) from exc
+
     return Response(content=cutout, media_type="image/png")
