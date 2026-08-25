@@ -22,6 +22,24 @@ Route groups
 
 The group name doesn't show up in the URL. If a page needs a session it goes in (app), because that's where the auth check will sit once we have one. We had /consent in (public) for a bit, which meant anyone could open it.
 
+App layout
+
+(app)/layout.tsx holds the shared shell — header, navigation, page container. Screens inside (app) don't need their own <main>, max-w-\*, mx-auto or page padding. Add those and you get double padding with the width capped twice.
+
+Write the screen as just its content:
+
+tsx
+export default function MyScreen() {
+return (
+<div>
+<h1 className="text-2xl font-bold">Title</h1>
+{/_ content _/}
+</div>
+);
+}
+
+Nav is a top bar on desktop and a bottom bar on mobile. New entries go in NAV_ITEMS at the top of the layout file.
+
 Imports
 
 @/ instead of relative paths:
@@ -104,6 +122,8 @@ http.get('\*/v1/wardrobe/items', () => {
 return HttpResponse.json({ items: [] });
 }),
 
+Item data comes from features/wardrobe/mock-data.ts rather than being written inline in the handler, so the same data feeds the list, the detail screen and the mock.
+
 There are commented-out error handlers at the bottom of handlers.ts — low colour confidence, empty list, 500. Paste one in when you want to check how your screen behaves.
 
 Dev only. NEXT_PUBLIC_API_MOCKING=disabled in .env turns it off.
@@ -140,6 +160,8 @@ frontend/dev → PR → dev (I raise, Pratyush merges)
 
 Pull frontend/dev and branch off it before you start. Working off a stale branch gives you CI failures that have nothing to do with your code, which wastes an hour figuring out.
 
+Pull and merge daily too — backend and AI push to dev regularly and I merge that down. Small merges beat one painful one later.
+
 Conventional commits: feat:, fix:, chore:.
 
 Don't git add .. It grabs stuff you didn't touch — I deleted the Husky hooks that way on day one.
@@ -154,6 +176,8 @@ MSW. We ended up with two screens mocking two different ways, one with setTimeou
 
 frontend/dev as a lead branch. Everything gets reviewed here first, then one PR goes up to dev instead of three separate ones landing on Pratyush.
 
+picsum.photos for mock images. placehold.co returns SVG and Next's <Image> blocks SVG by default, so nothing rendered. Any new image host also needs adding to remotePatterns in next.config.ts.
+
 Known limitations
 
 Stuff that's broken, missing, or worth knowing before you trip over it.
@@ -163,5 +187,6 @@ Auth is fake. Sign-in, sign-up and consent all run on mocked responses. Blocked 
 dependency-audit fails in CI. Pre-existing, project-wide, not ours.
 No tests. Section 13 of the ownership doc wants component tests for every error state plus E2E on the critical flows. We have none of that yet.
 No Core Web Vitals or bundle-size targets. Marked as undefined in the ownership doc and still undefined. Worth setting once there's enough UI to measure.
-No shared layout. Every screen styles its own page right now, so nothing looks consistent. A header and common layout belongs in (app)/layout.tsx. My job, not done.
+Onboarding progress uses sessionStorage, so it survives a refresh but not a closed tab. Once the profile endpoints exist this should save server-side instead.
 Wardrobe list scroll doesn't reset when you switch category. Filter down to a short list while scrolled and you get a blank viewport.
+Refine and Substitute on the results screen do nothing yet — no handlers wired up.

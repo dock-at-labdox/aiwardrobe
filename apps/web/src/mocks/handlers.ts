@@ -2,8 +2,8 @@ import { http, HttpResponse } from 'msw';
 
 import { MOCK_WARDROBE_ITEMS } from '../features/wardrobe/mock-data';
 
-// All mocked API responses live here.
-// When a real backend endpoint lands, delete its handler below — nothing else changes.
+// All mocked API responses live here. Item data comes from
+// features/wardrobe/mock-data.ts so it stays in one place.
 
 const BASE = '*/v1';
 
