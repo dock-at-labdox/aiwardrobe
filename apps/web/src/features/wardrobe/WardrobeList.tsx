@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -105,7 +106,11 @@ export default function WardrobeList() {
                   }}
                 >
                   {rowItems.map((item) => (
-                    <article key={item.id} className="overflow-hidden rounded-lg border bg-white">
+                    <Link
+                      key={item.id}
+                      href={`/wardrobe/${item.id}`}
+                      className="block overflow-hidden rounded-lg border bg-white"
+                    >
                       <Image
                         src={item.imageUrl}
                         alt={item.name}
@@ -120,7 +125,7 @@ export default function WardrobeList() {
                           {item.category} · {item.color}
                         </p>
                       </div>
-                    </article>
+                    </Link>
                   ))}
                 </div>
               );

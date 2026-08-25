@@ -1,50 +1,36 @@
 import { http, HttpResponse } from 'msw';
 
-// All mocked API responses live here.
-// When a real backend endpoint lands, delete its handler below — nothing else changes.
+import { MOCK_WARDROBE_ITEMS } from '../features/wardrobe/mock-data';
+
+// All mocked API responses live here. Item data comes from
+// features/wardrobe/mock-data.ts so it stays in one place.
 
 const BASE = '*/v1';
 
 export const handlers = [
   // GET /v1/wardrobe/items
   http.get(`${BASE}/wardrobe/items`, () => {
-    return HttpResponse.json({
-      items: [
-        {
-          id: 'itm_1',
-          name: 'Navy Blazer',
-          category: 'Outerwear',
-          color: 'Navy',
-          imageUrl: 'https://placehold.co/300x300?text=Blazer',
-        },
-        {
-          id: 'itm_2',
-          name: 'White Shirt',
-          category: 'Tops',
-          color: 'White',
-          imageUrl: 'https://placehold.co/300x300?text=Shirt',
-        },
-        {
-          id: 'itm_3',
-          name: 'Grey Trousers',
-          category: 'Bottoms',
-          color: 'Grey',
-          imageUrl: 'https://placehold.co/300x300?text=Trousers',
-        },
-      ],
-    });
+    return HttpResponse.json({ items: MOCK_WARDROBE_ITEMS });
   }),
 
   // GET /v1/wardrobe/items/:id
   http.get(`${BASE}/wardrobe/items/:id`, ({ params }) => {
-    return HttpResponse.json({
-      id: params.id,
-      name: 'Navy Blazer',
-      category: 'Outerwear',
-      color: 'Navy',
-      colorConfirmed: false,
-      imageUrl: 'https://placehold.co/600x600?text=Blazer',
-    });
+    const item = MOCK_WARDROBE_ITEMS.find((wardrobeItem) => wardrobeItem.id === params.id);
+
+    if (!item) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'WARDROBE_ITEM_NOT_FOUND',
+            message: 'We could not find this wardrobe item.',
+            correlation_id: crypto.randomUUID(),
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(item);
   }),
 
   // POST /v1/wardrobe/uploads/sessions
