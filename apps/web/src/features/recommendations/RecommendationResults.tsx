@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
-import type { RecommendationResult } from './mock-data';
+import { Button } from '@/components/ui/button';
+
+import type { RecommendationLook, RecommendationResult } from './mock-data';
 
 interface RecommendationResultsProps {
   resultId: string;
@@ -15,6 +17,9 @@ export default function RecommendationResults({ resultId }: RecommendationResult
   const [result, setResult] = useState<RecommendationResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorEnvelope | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [refiningLookId, setRefiningLookId] = useState<string | null>(null);
+  const [substitutingLookId, setSubstitutingLookId] = useState<string | null>(null);
 
   useEffect(() => {
     const apiClient = new ApiClient();
@@ -33,6 +38,13 @@ export default function RecommendationResults({ resultId }: RecommendationResult
       });
   }, [resultId]);
 
+  const handleLookAction = (action: 'refine' | 'substitute', look: RecommendationLook) => {
+    setActionMessage(
+      action === 'refine'
+        ? `Refine requested for ${look.label} look.`
+        : `Substitute requested for ${look.label} look.`,
+    );
+  };
   const conflicts =
     error?.error.code === 'CONSTRAINT_CONFLICT' && Array.isArray(error.error.details?.conflicts)
       ? error.error.details.conflicts
@@ -40,16 +52,16 @@ export default function RecommendationResults({ resultId }: RecommendationResult
 
   if (error?.error.code === 'INSUFFICIENT_WARDROBE') {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <div>
         <h1 className="text-3xl font-bold">Your recommendations</h1>
         <p className="mt-4 text-gray-600">Add more items for this occasion.</p>
-      </main>
+      </div>
     );
   }
 
   if (error?.error.code === 'CONSTRAINT_CONFLICT') {
     return (
-      <main className="mx-auto w-full max-w-6xl px-4 py-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8">
         <h1 className="text-3xl font-bold">Your recommendations</h1>
         <p className="mt-4 text-gray-600">Some of your selected items conflict:</p>
 
@@ -58,12 +70,12 @@ export default function RecommendationResults({ resultId }: RecommendationResult
             <li key={String(conflict)}>{String(conflict)}</li>
           ))}
         </ul>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-8">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Your style recommendations</h1>
         <p className="mt-2 text-gray-600">Three ways to wear the items in your wardrobe.</p>
@@ -73,7 +85,7 @@ export default function RecommendationResults({ resultId }: RecommendationResult
         loading={loading}
         error={error}
         empty={!loading && !result}
-        loadingMessage="Building your looks. Checking your wardrobe and preparing recommendations..."
+        loadingMessage="Building your looks. This may take a few seconds..."
         emptyMessage="No recommendations are available yet."
       >
         <div className="grid gap-6 md:grid-cols-3">
@@ -128,24 +140,34 @@ export default function RecommendationResults({ resultId }: RecommendationResult
               </div>
 
               <div className="flex gap-2 border-t p-4">
-                <button
+                <Button
                   type="button"
-                  className="flex-1 rounded-md border px-3 py-2 text-sm font-medium"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setRefiningLookId(look.id);
+                    setTimeout(() => setRefiningLookId(null), 500);
+                  }}
                 >
-                  Refine
-                </button>
+                  {refiningLookId === look.id ? 'Refining...' : 'Refine'}
+                </Button>
 
-                <button
+                <Button
                   type="button"
-                  className="flex-1 rounded-md border px-3 py-2 text-sm font-medium"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setSubstitutingLookId(look.id);
+                    setTimeout(() => setSubstitutingLookId(null), 500);
+                  }}
                 >
-                  Substitute
-                </button>
+                  {substitutingLookId === look.id ? 'Substituting...' : 'Substitute'}
+                </Button>
               </div>
             </article>
           ))}
         </div>
       </AsyncState>
-    </main>
+    </div>
   );
 }
