@@ -72,6 +72,26 @@ class ScoreComponents:
 
 @dataclass
 class CandidateOutfit:
+    """Unscored candidate outfit, produced by candidate_generation. Has
+    no scores field at all, on purpose. Trying to call .overall() or
+    read scores on one of these should be a type error, not a runtime
+    None-check, since scoring genuinely has not happened yet at this
+    point in the pipeline.
+    """
+
     item_ids: list[str]
-    scores: ScoreComponents | None = None
+
+
+@dataclass
+class ScoredCandidateOutfit:
+    """A CandidateOutfit that has been through scoring. scores is a
+    required, non-optional field here, not an Optional on the
+    unscored type, so every function downstream of scoring can rely
+    on candidate.scores existing without a None check, and the type
+    checker enforces that a caller cannot pass an unscored candidate
+    into a stage that expects one.
+    """
+
+    item_ids: list[str]
+    scores: ScoreComponents
     explanation: str | None = None

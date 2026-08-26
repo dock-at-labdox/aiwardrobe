@@ -29,16 +29,50 @@ def _naive_compatibility(a: WardrobeItem, b: WardrobeItem) -> float:
     return 1.0 if a.formality == b.formality else 0.3
 
 
+def _slots_to_fill_for_anchor(anchor: WardrobeItem) -> set[str]:
+    """Which slots need to be filled for a given anchor.
+
+    A one_piece item (dress, jumpsuit) already covers both top and
+    bottom by itself, so it must not also require separate top and
+    bottom items, only footwear plus itself. Every other anchor type
+    (layer, bottom) still needs the full required-slot set plus its
+    own category, same as before.
+    """
+    if anchor.category == "one_piece":
+        return {"footwear", "one_piece"}
+    return set(REQUIRED_SLOTS) | {anchor.category}
+
+
 def _top_candidates_for_slot(
-    anchor: WardrobeItem, pool: list[WardrobeItem], category: str
+    anchor: WardrobeItem,
+    pool: list[WardrobeItem],
+    category: str,
+    required_item_ids: list[str],
 ) -> list[WardrobeItem]:
+    """Return up to MAX_CANDIDATES_PER_SLOT items for this slot, ranked
+    by compatibility with the anchor.
+
+    Any eligible item in this slot that is a pinned/required item is
+    always included, even if it would otherwise fall outside the
+    top-N cap, since a required item silently disappearing from
+    candidates because it ranked 4th on a naive compatibility score
+    would violate REC-001, results must contain pinned items.
+    """
     slot_items = [item for item in pool if item.category == category]
     ranked = sorted(
         slot_items,
         key=lambda item: _naive_compatibility(anchor, item),
         reverse=True,
     )
-    return ranked[:MAX_CANDIDATES_PER_SLOT]
+    top = ranked[:MAX_CANDIDATES_PER_SLOT]
+
+    top_ids = {item.id for item in top}
+    for item in slot_items:
+        if item.id in required_item_ids and item.id not in top_ids:
+            top.append(item)
+            top_ids.add(item.id)
+
+    return top
 
 
 def generate_candidates(
@@ -55,17 +89,15 @@ def generate_candidates(
 
     candidates: list[CandidateOutfit] = []
     for anchor in anchors:
-        # Slots to fill: the required slots, plus the anchor's own
-        # category if that category is not already one of them (for
-        # example a blazer, category "layer", is not itself a required
-        # slot but must still appear in the final outfit).
-        slots_to_fill = set(REQUIRED_SLOTS) | {anchor.category}
+        slots_to_fill = _slots_to_fill_for_anchor(anchor)
 
         slot_options = {
             slot: (
                 [anchor]
                 if slot == anchor.category
-                else _top_candidates_for_slot(anchor, eligible_items, slot)
+                else _top_candidates_for_slot(
+                    anchor, eligible_items, slot, required_item_ids
+                )
             )
             for slot in slots_to_fill
         }

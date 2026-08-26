@@ -14,7 +14,7 @@ the real implementation must satisfy.
 
 from dataclasses import dataclass
 
-from apps.recommendation.domain.models import CandidateOutfit, WardrobeItem
+from apps.recommendation.domain.models import ScoredCandidateOutfit, WardrobeItem
 
 
 @dataclass
@@ -24,7 +24,7 @@ class ExplanationFact:
 
 
 def build_structured_facts(
-    candidate: CandidateOutfit, wardrobe_by_id: dict[str, WardrobeItem]
+    candidate: ScoredCandidateOutfit, wardrobe_by_id: dict[str, WardrobeItem]
 ) -> list[ExplanationFact]:
     items = [wardrobe_by_id[item_id] for item_id in candidate.item_ids]
     scores = candidate.scores

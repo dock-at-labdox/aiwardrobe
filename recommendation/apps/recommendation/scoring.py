@@ -17,6 +17,7 @@ from apps.recommendation.domain.models import (
     CandidateOutfit,
     Occasion,
     ScoreComponents,
+    ScoredCandidateOutfit,
     WardrobeItem,
 )
 
@@ -106,7 +107,18 @@ def score_all_candidates(
     candidates: list[CandidateOutfit],
     wardrobe_by_id: dict[str, WardrobeItem],
     occasion: Occasion,
-) -> list[CandidateOutfit]:
-    for candidate in candidates:
-        candidate.scores = score_candidate(candidate, wardrobe_by_id, occasion)
-    return candidates
+) -> list[ScoredCandidateOutfit]:
+    """Takes unscored candidates in, returns scored candidates out, as
+    a new list rather than mutating the input in place. This is what
+    makes the type change in domain/models.py actually hold: nothing
+    downstream can accidentally receive an unscored CandidateOutfit
+    and treat it as scored, since this function's return type is
+    ScoredCandidateOutfit, not the input type.
+    """
+    return [
+        ScoredCandidateOutfit(
+            item_ids=candidate.item_ids,
+            scores=score_candidate(candidate, wardrobe_by_id, occasion),
+        )
+        for candidate in candidates
+    ]
