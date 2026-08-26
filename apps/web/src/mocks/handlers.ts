@@ -145,6 +145,24 @@ export const handlers = [
       ],
     });
   }),
+  // POST /v1/recommendations/:id/refine
+  http.post(`${BASE}/recommendations/:id/refine`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      lookId?: string;
+      action?: 'refine' | 'substitute';
+    };
+
+    return HttpResponse.json({
+      id: params.id,
+      status: 'complete',
+      lookId: body.lookId,
+      action: body.action,
+      message:
+        body.action === 'substitute'
+          ? 'Substitution applied to this look.'
+          : 'Refinement applied to this look.',
+    });
+  }),
 ];
 
 // Error examples — copy one of these into `handlers` above

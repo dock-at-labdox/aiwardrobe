@@ -38,12 +38,29 @@ export default function RecommendationResults({ resultId }: RecommendationResult
       });
   }, [resultId]);
 
-  const handleLookAction = (action: 'refine' | 'substitute', look: RecommendationLook) => {
-    setActionMessage(
-      action === 'refine'
-        ? `Refine requested for ${look.label} look.`
-        : `Substitute requested for ${look.label} look.`,
-    );
+  const handleLookAction = async (action: 'refine' | 'substitute', look: RecommendationLook) => {
+    try {
+      const response = await fetch(`/v1/recommendations/${resultId}/refine`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          lookId: look.id,
+          action,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to update this look.');
+      }
+
+      const data = (await response.json()) as { message?: string };
+
+      setActionMessage(data.message ?? `${action} requested for ${look.label} look.`);
+    } catch {
+      setActionMessage(`Unable to ${action} this look. Please try again.`);
+    }
   };
   const conflicts =
     error?.error.code === 'CONSTRAINT_CONFLICT' && Array.isArray(error.error.details?.conflicts)
@@ -61,7 +78,7 @@ export default function RecommendationResults({ resultId }: RecommendationResult
 
   if (error?.error.code === 'CONSTRAINT_CONFLICT') {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-8">
+      <div>
         <h1 className="text-3xl font-bold">Your recommendations</h1>
         <p className="mt-4 text-gray-600">Some of your selected items conflict:</p>
 
@@ -75,12 +92,17 @@ export default function RecommendationResults({ resultId }: RecommendationResult
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+    <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Your style recommendations</h1>
         <p className="mt-2 text-gray-600">Three ways to wear the items in your wardrobe.</p>
       </div>
 
+      {actionMessage && (
+        <p className="mb-4 text-sm text-gray-600" role="status">
+          {actionMessage}
+        </p>
+      )}
       <AsyncState
         loading={loading}
         error={error}
@@ -144,24 +166,18 @@ export default function RecommendationResults({ resultId }: RecommendationResult
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
-                    setRefiningLookId(look.id);
-                    setTimeout(() => setRefiningLookId(null), 500);
-                  }}
+                  onClick={() => handleLookAction('refine', look)}
                 >
-                  {refiningLookId === look.id ? 'Refining...' : 'Refine'}
+                  Refine
                 </Button>
 
                 <Button
                   type="button"
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
-                    setSubstitutingLookId(look.id);
-                    setTimeout(() => setSubstitutingLookId(null), 500);
-                  }}
+                  onClick={() => handleLookAction('substitute', look)}
                 >
-                  {substitutingLookId === look.id ? 'Substituting...' : 'Substitute'}
+                  Substitute
                 </Button>
               </div>
             </article>
