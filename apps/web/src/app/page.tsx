@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 export default function IndexPage() {
-  return <main>AI Wardrobe foundation</main>;
+  redirect('/welcome');
 }
