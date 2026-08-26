@@ -48,6 +48,121 @@ export const handlers = [
       confidence: 0.92,
     });
   }),
+
+  // GET /v1/style/results/:id
+  http.get(`${BASE}/style/results/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      status: 'complete',
+      looks: [
+        {
+          id: 'look_safe',
+          label: 'Safe',
+          overallScore: 86,
+          items: [
+            {
+              id: 'itm_1',
+              name: 'Navy Blazer',
+              imageUrl: 'https://placehold.co/300x300?text=Blazer',
+            },
+            {
+              id: 'itm_2',
+              name: 'White Shirt',
+              imageUrl: 'https://placehold.co/300x300?text=Shirt',
+            },
+            {
+              id: 'itm_3',
+              name: 'Grey Trousers',
+              imageUrl: 'https://placehold.co/300x300?text=Trousers',
+            },
+          ],
+          scores: {
+            color: 9,
+            occasion: 9,
+            compatibility: 8,
+          },
+          explanation:
+            'The navy blazer, white shirt, and grey trousers create a balanced combination for the selected occasion.',
+        },
+        {
+          id: 'look_balanced',
+          label: 'Balanced',
+          overallScore: 89,
+          items: [
+            {
+              id: 'itm_2',
+              name: 'White Shirt',
+              imageUrl: 'https://placehold.co/300x300?text=Shirt',
+            },
+            {
+              id: 'itm_3',
+              name: 'Grey Trousers',
+              imageUrl: 'https://placehold.co/300x300?text=Trousers',
+            },
+            {
+              id: 'itm_1',
+              name: 'Navy Blazer',
+              imageUrl: 'https://placehold.co/300x300?text=Blazer',
+            },
+          ],
+          scores: {
+            color: 9,
+            occasion: 8,
+            compatibility: 10,
+          },
+          explanation:
+            'The neutral shirt and trousers provide a versatile base while the blazer adds structure.',
+        },
+        {
+          id: 'look_distinctive',
+          label: 'Distinctive',
+          overallScore: 82,
+          items: [
+            {
+              id: 'itm_1',
+              name: 'Navy Blazer',
+              imageUrl: 'https://placehold.co/300x300?text=Blazer',
+            },
+            {
+              id: 'itm_3',
+              name: 'Grey Trousers',
+              imageUrl: 'https://placehold.co/300x300?text=Trousers',
+            },
+            {
+              id: 'itm_2',
+              name: 'White Shirt',
+              imageUrl: 'https://placehold.co/300x300?text=Shirt',
+            },
+          ],
+          scores: {
+            color: 8,
+            occasion: 8,
+            compatibility: 9,
+          },
+          explanation:
+            'The darker blazer creates a stronger contrast against the lighter pieces while remaining versatile.',
+        },
+      ],
+    });
+  }),
+  // POST /v1/recommendations/:id/refine
+  http.post(`${BASE}/recommendations/:id/refine`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      lookId?: string;
+      action?: 'refine' | 'substitute';
+    };
+
+    return HttpResponse.json({
+      id: params.id,
+      status: 'complete',
+      lookId: body.lookId,
+      action: body.action,
+      message:
+        body.action === 'substitute'
+          ? 'Substitution applied to this look.'
+          : 'Refinement applied to this look.',
+    });
+  }),
 ];
 
 // Error examples — copy one of these into `handlers` above
