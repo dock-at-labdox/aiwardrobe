@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
@@ -21,9 +21,9 @@ export default function RecommendationResults({ resultId }: RecommendationResult
   const [refiningLookId, setRefiningLookId] = useState<string | null>(null);
   const [substitutingLookId, setSubstitutingLookId] = useState<string | null>(null);
 
-  useEffect(() => {
-    const apiClient = new ApiClient();
+  const apiClient = useMemo(() => new ApiClient(), []);
 
+  useEffect(() => {
     apiClient
       .get<RecommendationResult>(`/v1/style/results/${resultId}`)
       .then((response) => {
@@ -36,26 +36,15 @@ export default function RecommendationResults({ resultId }: RecommendationResult
       .finally(() => {
         setLoading(false);
       });
-  }, [resultId]);
+  }, [apiClient, resultId]);
 
   const handleLookAction = async (action: 'refine' | 'substitute', look: RecommendationLook) => {
     try {
-      const response = await fetch(`/v1/recommendations/${resultId}/refine`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          lookId: look.id,
-          action,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Unable to update this look.');
-      }
-
-      const data = (await response.json()) as { message?: string };
+      const data = await apiClient.post<{ message?: string }>(
+        `/v1/recommendations/${resultId}/refine`,
+        { lookId: look.id, action },
+        { idempotencyKey: crypto.randomUUID() },
+      );
 
       setActionMessage(data.message ?? `${action} requested for ${look.label} look.`);
     } catch {
