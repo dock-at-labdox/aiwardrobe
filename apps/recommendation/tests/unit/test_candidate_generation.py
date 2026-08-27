@@ -6,8 +6,8 @@ Tests for the two candidate-generation fixes raised in review:
    per-slot cap; it must always be considered if eligible.
 """
 
-from apps.recommendation.candidate_generation import generate_candidates
-from apps.recommendation.domain.models import ColorProfile, WardrobeItem
+from app.domain.candidate_generation import generate_candidates
+from app.domain.models import ColorProfile, WardrobeItem
 
 BASE_COLOR = ColorProfile(
     dominant_lab=(50.0, 0.0, 0.0),
@@ -17,7 +17,12 @@ BASE_COLOR = ColorProfile(
 )
 
 
-def make_item(id, category, formality="business", subtype="test item"):
+def make_item(
+    id: str,
+    category: str = "top",
+    formality: str = "business",
+    subtype: str = "test item",
+) -> WardrobeItem:
     return WardrobeItem(
         id=id,
         category=category,
@@ -31,7 +36,7 @@ def make_item(id, category, formality="business", subtype="test item"):
     )
 
 
-def test_one_piece_does_not_require_separate_top_and_bottom():
+def test_one_piece_does_not_require_separate_top_and_bottom() -> None:
     """A dress plus shoes should be enough to generate a candidate.
     No top or bottom item exists in this wardrobe at all; if the bug
     were still present, generate_candidates would return nothing,
@@ -53,7 +58,7 @@ def test_one_piece_does_not_require_separate_top_and_bottom():
         assert len(candidate.item_ids) == 2
 
 
-def test_required_item_survives_top_n_cap_even_when_it_ranks_low():
+def test_required_item_survives_top_n_cap_even_when_it_ranks_low() -> None:
     """Build a slot with more than MAX_CANDIDATES_PER_SLOT items where
     the required item is deliberately the worst match by the naive
     compatibility function (mismatched formality), so it would be cut

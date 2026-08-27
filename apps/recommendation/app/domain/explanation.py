@@ -14,7 +14,7 @@ the real implementation must satisfy.
 
 from dataclasses import dataclass
 
-from apps.recommendation.domain.models import ScoredCandidateOutfit, WardrobeItem
+from app.domain.models import ScoredCandidateOutfit, WardrobeItem
 
 
 @dataclass

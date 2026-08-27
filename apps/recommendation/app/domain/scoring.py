@@ -13,7 +13,7 @@ known harmonic templates, per the color harmony research in the doc.
 
 import math
 
-from apps.recommendation.domain.models import (
+from app.domain.models import (
     CandidateOutfit,
     Occasion,
     ScoreComponents,

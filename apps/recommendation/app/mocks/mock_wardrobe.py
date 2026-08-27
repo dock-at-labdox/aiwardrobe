@@ -5,7 +5,7 @@ available yet. Swap this module for a real data source later; nothing
 downstream should need to change when that happens.
 """
 
-from apps.recommendation.domain.models import ColorProfile, WardrobeItem
+from app.domain.models import ColorProfile, WardrobeItem
 
 MOCK_WARDROBE: list[WardrobeItem] = [
     WardrobeItem(

@@ -6,16 +6,16 @@ wardrobe source once vision-color is available; nothing in this module
 needs to change.
 """
 
-from apps.recommendation.candidate_generation import generate_candidates
-from apps.recommendation.diversity_rerank import rerank_for_diversity
-from apps.recommendation.domain.models import Occasion, WardrobeItem
-from apps.recommendation.eligibility import check_required_items, filter_eligible_items
-from apps.recommendation.explanation import (
+from app.domain.candidate_generation import generate_candidates
+from app.domain.diversity_rerank import rerank_for_diversity
+from app.domain.eligibility import check_required_items, filter_eligible_items
+from app.domain.explanation import (
     build_structured_facts,
     generate_explanation_stub,
     verify_grounding,
 )
-from apps.recommendation.scoring import score_all_candidates
+from app.domain.models import Occasion, RecommendationResult, WardrobeItem
+from app.domain.scoring import score_all_candidates
 
 
 class InsufficientWardrobeError(Exception):
@@ -30,7 +30,7 @@ class ConstraintConflictError(Exception):
 
 def generate_recommendations(
     wardrobe: list[WardrobeItem], occasion: Occasion, top_n: int = 3
-) -> list[dict]:
+) -> list[RecommendationResult]:
     conflicts = check_required_items(wardrobe, occasion)
     if conflicts:
         raise ConstraintConflictError(conflicting_item_ids=conflicts)
@@ -47,7 +47,7 @@ def generate_recommendations(
     scored = score_all_candidates(candidates, wardrobe_by_id, occasion)
     top_candidates = rerank_for_diversity(scored, top_n=top_n)
 
-    results = []
+    results: list[RecommendationResult] = []
     for candidate in top_candidates:
         facts = build_structured_facts(candidate, wardrobe_by_id)
         explanation = generate_explanation_stub(facts)
@@ -55,12 +55,12 @@ def generate_recommendations(
             explanation = "Explanation withheld: failed grounding check."
 
         results.append(
-            {
-                "item_ids": candidate.item_ids,
-                "overall_score": round(candidate.scores.overall(), 3),
-                "score_components": vars(candidate.scores),
-                "explanation": explanation,
-            }
+            RecommendationResult(
+                item_ids=candidate.item_ids,
+                overall_score=round(candidate.scores.overall(), 3),
+                score_components=vars(candidate.scores),
+                explanation=explanation,
+            )
         )
 
     return results
