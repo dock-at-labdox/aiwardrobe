@@ -46,9 +46,18 @@ importers:
       '@aiwardrobe/shared-web':
         specifier: workspace:*
         version: link:../../packages/shared-web
+      '@base-ui/react':
+        specifier: ^1.7.0
+        version: 1.7.0(@types/react@19.1.12)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@tanstack/react-query':
         specifier: 5.87.4
         version: 5.87.4(react@19.1.1)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       next:
         specifier: 16.3.1
         version: 16.3.1(@babel/core@7.29.7)(@types/node@24.3.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -58,6 +67,9 @@ importers:
       react-dom:
         specifier: 19.1.1
         version: 19.1.1(react@19.1.1)
+      tailwind-merge:
+        specifier: ^3.6.0
+        version: 3.6.0
       tailwindcss:
         specifier: 4.1.13
         version: 4.1.13
