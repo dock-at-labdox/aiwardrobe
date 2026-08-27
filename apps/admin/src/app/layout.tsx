@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import MswProvider from '@/mocks/MswProvider';
 import { ReactNode } from 'react';
 import { AppProviders } from '@aiwardrobe/shared-web';
 
@@ -30,7 +31,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en">
       <body>
-        <AppProviders>{children}</AppProviders>
+        <MswProvider>
+          <AppProviders>{children}</AppProviders>
+        </MswProvider>
       </body>
     </html>
   );

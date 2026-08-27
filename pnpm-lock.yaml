@@ -95,6 +95,9 @@ importers:
       eslint-config-next:
         specifier: 16.3.1
         version: 16.3.1(@typescript-eslint/parser@8.67.0(eslint@9.35.0(jiti@2.7.0))(typescript@5.9.2))(eslint@9.35.0(jiti@2.7.0))(typescript@5.9.2)
+      msw:
+        specifier: ^2.15.0
+        version: 2.15.0(@types/node@24.3.1)(typescript@5.9.2)
       typescript:
         specifier: 5.9.2
         version: 5.9.2
