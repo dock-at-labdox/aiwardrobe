@@ -1,16 +1,31 @@
 import { http, HttpResponse } from 'msw';
 
+import { MOCK_SAVED_LOOKS, MOCK_WEAR_EVENTS } from '../features/planner/mock-data';
 import { MOCK_WARDROBE_ITEMS } from '../features/wardrobe/mock-data';
 
-// All mocked API responses live here. Item data comes from
-// features/wardrobe/mock-data.ts so it stays in one place.
+// All mocked API responses live here.
+// Backend is pending, so frontend API responses are handled by MSW for now.
+// Item data comes from the feature mock-data files so it stays in one place.
 
 const BASE = '*/v1';
+
+// Reused across the recommendation looks so the images match the wardrobe.
+const [blazer, whiteShirt, trousers] = MOCK_WARDROBE_ITEMS;
+
+function lookItem(item: (typeof MOCK_WARDROBE_ITEMS)[number]) {
+  return {
+    id: item.id,
+    name: item.name,
+    imageUrl: item.imageUrl,
+  };
+}
 
 export const handlers = [
   // GET /v1/wardrobe/items
   http.get(`${BASE}/wardrobe/items`, () => {
-    return HttpResponse.json({ items: MOCK_WARDROBE_ITEMS });
+    return HttpResponse.json({
+      items: MOCK_WARDROBE_ITEMS,
+    });
   }),
 
   // GET /v1/wardrobe/items/:id
@@ -49,6 +64,17 @@ export const handlers = [
     });
   }),
 
+  // POST /v1/recommendations
+  http.post(`${BASE}/recommendations`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    return HttpResponse.json({
+      id: crypto.randomUUID(),
+      status: 'created',
+      ...body,
+    });
+  }),
+
   // GET /v1/style/results/:id
   http.get(`${BASE}/style/results/:id`, ({ params }) => {
     return HttpResponse.json({
@@ -59,52 +85,20 @@ export const handlers = [
           id: 'look_safe',
           label: 'Safe',
           overallScore: 86,
-          items: [
-            {
-              id: 'itm_1',
-              name: 'Navy Blazer',
-              imageUrl: 'https://placehold.co/300x300?text=Blazer',
-            },
-            {
-              id: 'itm_2',
-              name: 'White Shirt',
-              imageUrl: 'https://placehold.co/300x300?text=Shirt',
-            },
-            {
-              id: 'itm_3',
-              name: 'Grey Trousers',
-              imageUrl: 'https://placehold.co/300x300?text=Trousers',
-            },
-          ],
+          items: [lookItem(blazer), lookItem(whiteShirt), lookItem(trousers)],
           scores: {
             color: 9,
             occasion: 9,
             compatibility: 8,
           },
           explanation:
-            'The navy blazer, white shirt, and grey trousers create a balanced combination for the selected occasion.',
+            'The navy blazer, white shirt and grey trousers create a balanced combination for the selected occasion.',
         },
         {
           id: 'look_balanced',
           label: 'Balanced',
           overallScore: 89,
-          items: [
-            {
-              id: 'itm_2',
-              name: 'White Shirt',
-              imageUrl: 'https://placehold.co/300x300?text=Shirt',
-            },
-            {
-              id: 'itm_3',
-              name: 'Grey Trousers',
-              imageUrl: 'https://placehold.co/300x300?text=Trousers',
-            },
-            {
-              id: 'itm_1',
-              name: 'Navy Blazer',
-              imageUrl: 'https://placehold.co/300x300?text=Blazer',
-            },
-          ],
+          items: [lookItem(whiteShirt), lookItem(trousers), lookItem(blazer)],
           scores: {
             color: 9,
             occasion: 8,
@@ -117,23 +111,7 @@ export const handlers = [
           id: 'look_distinctive',
           label: 'Distinctive',
           overallScore: 82,
-          items: [
-            {
-              id: 'itm_1',
-              name: 'Navy Blazer',
-              imageUrl: 'https://placehold.co/300x300?text=Blazer',
-            },
-            {
-              id: 'itm_3',
-              name: 'Grey Trousers',
-              imageUrl: 'https://placehold.co/300x300?text=Trousers',
-            },
-            {
-              id: 'itm_2',
-              name: 'White Shirt',
-              imageUrl: 'https://placehold.co/300x300?text=Shirt',
-            },
-          ],
+          items: [lookItem(blazer), lookItem(trousers), lookItem(whiteShirt)],
           scores: {
             color: 8,
             occasion: 8,
@@ -145,6 +123,7 @@ export const handlers = [
       ],
     });
   }),
+
   // POST /v1/recommendations/:id/refine
   http.post(`${BASE}/recommendations/:id/refine`, async ({ params, request }) => {
     const body = (await request.json().catch(() => ({}))) as {
@@ -163,11 +142,53 @@ export const handlers = [
           : 'Refinement applied to this look.',
     });
   }),
+
+  // GET /v1/planner/looks
+  http.get(`${BASE}/planner/looks`, () => {
+    return HttpResponse.json({
+      looks: MOCK_SAVED_LOOKS,
+    });
+  }),
+
+  // GET /v1/planner/wear-history
+  http.get(`${BASE}/planner/wear-history`, () => {
+    return HttpResponse.json({
+      events: MOCK_WEAR_EVENTS,
+    });
+  }),
+
+  // POST /v1/planner/looks/:id/worn
+  http.post(`${BASE}/planner/looks/:id/worn`, ({ params }) => {
+    const savedLook = MOCK_SAVED_LOOKS.find((look) => look.id === params.id);
+
+    if (!savedLook) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'SAVED_LOOK_NOT_FOUND',
+            message: 'We could not find this saved look.',
+            correlation_id: crypto.randomUUID(),
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    const wearEvent = {
+      id: crypto.randomUUID(),
+      savedLookId: savedLook.id,
+      wornAt: new Date().toISOString().slice(0, 10),
+    };
+
+    return HttpResponse.json(wearEvent, { status: 201 });
+  }),
 ];
 
-// Error examples — copy one of these into `handlers` above
-// (or use server.use(...) in a test) to see how a screen handles it.
-//
+// -----------------------------------------------------------------------------
+// Error examples
+// Copy one of these into `handlers` above or use `server.use(...)` in a test.
+// -----------------------------------------------------------------------------
+
 // Low colour confidence:
 //
 // http.post(`${BASE}/color/analyze`, () => {
@@ -182,14 +203,30 @@ export const handlers = [
 //     },
 //     { status: 422 },
 //   );
-// }),
+// });
+
+// Insufficient wardrobe on recommendations:
 //
+// http.post(`${BASE}/recommendations`, () => {
+//   return HttpResponse.json(
+//     {
+//       error: {
+//         code: 'INSUFFICIENT_WARDROBE',
+//         message: 'Not enough items to build a look for this occasion.',
+//         correlation_id: crypto.randomUUID(),
+//         details: { retryable: false },
+//       },
+//     },
+//     { status: 422 },
+//   );
+// });
+
 // Empty wardrobe:
 //
 // http.get(`${BASE}/wardrobe/items`, () => {
 //   return HttpResponse.json({ items: [] });
-// }),
-//
+// });
+
 // Server error:
 //
 // http.get(`${BASE}/wardrobe/items`, () => {
@@ -204,4 +241,4 @@ export const handlers = [
 //     },
 //     { status: 500 },
 //   );
-// }),
+// });
