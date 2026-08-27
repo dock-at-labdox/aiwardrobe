@@ -31,6 +31,7 @@ Write the screen as just its content:
 tsx
 export default function MyScreen() {
 return (
+
 <div>
 <h1 className="text-2xl font-bold">Title</h1>
 {/_ content _/}

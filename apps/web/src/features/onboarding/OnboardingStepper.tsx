@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,25 +33,28 @@ const EMPTY: OnboardingData = {
 
 const TOTAL_STEPS = 3;
 
+// Read saved progress during the first render rather than inside an effect,
+// so a user who drops off mid-way picks up where they left off.
+function loadSaved(): OnboardingData {
+  if (typeof window === 'undefined') return EMPTY;
+
+  try {
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved) as OnboardingData;
+  } catch {
+    // corrupted value, start fresh
+  }
+
+  return EMPTY;
+}
+
 export default function OnboardingStepper() {
-  const [data, setData] = useState<OnboardingData>(EMPTY);
-  const [loaded, setLoaded] = useState(false);
-
-  // Restore progress so a user who drops off mid-way picks up where they left.
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem(STORAGE_KEY);
-      if (saved) setData(JSON.parse(saved) as OnboardingData);
-    } catch {
-      // corrupted value, start fresh
-    }
-    setLoaded(true);
-  }, []);
+  const router = useRouter();
+  const [data, setData] = useState<OnboardingData>(loadSaved);
 
   useEffect(() => {
-    if (!loaded) return;
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [data, loaded]);
+  }, [data]);
 
   function update(patch: Partial<OnboardingData>) {
     setData((current) => ({ ...current, ...patch }));
@@ -63,8 +67,6 @@ export default function OnboardingStepper() {
   function back() {
     update({ step: Math.max(data.step - 1, 1) });
   }
-
-  if (!loaded) return null;
 
   return (
     <div className="mx-auto w-full max-w-lg">
@@ -187,7 +189,7 @@ export default function OnboardingStepper() {
             <p className="text-sm text-muted-foreground">
               Photograph or upload a garment to get started.
             </p>
-            <Button className="mt-4" onClick={() => (window.location.href = '/wardrobe/new')}>
+            <Button className="mt-4" onClick={() => router.push('/wardrobe/new')}>
               Add an item
             </Button>
           </div>
@@ -196,7 +198,7 @@ export default function OnboardingStepper() {
             <Button variant="outline" onClick={back} className="flex-1">
               Back
             </Button>
-            <Button onClick={() => (window.location.href = '/wardrobe')} className="flex-1">
+            <Button onClick={() => router.push('/wardrobe')} className="flex-1">
               Done for now
             </Button>
           </div>

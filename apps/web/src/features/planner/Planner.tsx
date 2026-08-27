@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
+import { Button } from '@/components/ui/button';
+
 import type { SavedLook, WearEvent } from './mock-data';
 
 export default function Planner() {
@@ -71,17 +73,17 @@ export default function Planner() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6">
+    <div>
       <header className="mb-6">
         <h1 className="text-3xl font-bold">Planner</h1>
 
         <p className="mt-2 text-sm text-muted-foreground">
-          Save your favorite looks and keep track of what you wear.
+          Save your favourite looks and keep track of what you wear.
         </p>
       </header>
 
       <section>
-        <h2 className="text-xl font-semibold">Saved Looks</h2>
+        <h2 className="text-xl font-semibold">Saved looks</h2>
 
         <div className="mt-4">
           <AsyncState
@@ -102,14 +104,15 @@ export default function Planner() {
                     Created {new Date(look.createdAt).toLocaleDateString()}
                   </p>
 
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => markAsWorn(look.id)}
                     disabled={wornLoadingId === look.id}
-                    className="mt-4 rounded-md border px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-4"
                   >
-                    {wornLoadingId === look.id ? 'Marking...' : 'Mark as Worn'}
-                  </button>
+                    {wornLoadingId === look.id ? 'Marking...' : 'Mark as worn'}
+                  </Button>
                 </article>
               ))}
             </div>
@@ -120,7 +123,7 @@ export default function Planner() {
       </section>
 
       <section className="mt-10">
-        <h2 className="text-xl font-semibold">Wear History</h2>
+        <h2 className="text-xl font-semibold">Wear history</h2>
 
         <div className="mt-4">
           <AsyncState
@@ -158,6 +161,6 @@ export default function Planner() {
           </AsyncState>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

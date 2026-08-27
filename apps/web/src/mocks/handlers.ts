@@ -1,12 +1,24 @@
 import { http, HttpResponse } from 'msw';
 
-import { MOCK_WARDROBE_ITEMS } from '../features/wardrobe/mock-data';
 import { MOCK_SAVED_LOOKS, MOCK_WEAR_EVENTS } from '../features/planner/mock-data';
+import { MOCK_WARDROBE_ITEMS } from '../features/wardrobe/mock-data';
 
 // All mocked API responses live here.
 // Backend is pending, so frontend API responses are handled by MSW for now.
+// Item data comes from the feature mock-data files so it stays in one place.
 
 const BASE = '*/v1';
+
+// Reused across the recommendation looks so the images match the wardrobe.
+const [blazer, whiteShirt, trousers] = MOCK_WARDROBE_ITEMS;
+
+function lookItem(item: (typeof MOCK_WARDROBE_ITEMS)[number]) {
+  return {
+    id: item.id,
+    name: item.name,
+    imageUrl: item.imageUrl,
+  };
+}
 
 export const handlers = [
   // GET /v1/wardrobe/items
@@ -53,9 +65,8 @@ export const handlers = [
   }),
 
   // POST /v1/recommendations
-  // Backend is pending, so recommendations are mocked with MSW for now.
   http.post(`${BASE}/recommendations`, async ({ request }) => {
-    const body = (await request.json()) as Record<string, unknown>;
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
     return HttpResponse.json({
       id: crypto.randomUUID(),
@@ -63,6 +74,75 @@ export const handlers = [
       ...body,
     });
   }),
+
+  // GET /v1/style/results/:id
+  http.get(`${BASE}/style/results/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      status: 'complete',
+      looks: [
+        {
+          id: 'look_safe',
+          label: 'Safe',
+          overallScore: 86,
+          items: [lookItem(blazer), lookItem(whiteShirt), lookItem(trousers)],
+          scores: {
+            color: 9,
+            occasion: 9,
+            compatibility: 8,
+          },
+          explanation:
+            'The navy blazer, white shirt and grey trousers create a balanced combination for the selected occasion.',
+        },
+        {
+          id: 'look_balanced',
+          label: 'Balanced',
+          overallScore: 89,
+          items: [lookItem(whiteShirt), lookItem(trousers), lookItem(blazer)],
+          scores: {
+            color: 9,
+            occasion: 8,
+            compatibility: 10,
+          },
+          explanation:
+            'The neutral shirt and trousers provide a versatile base while the blazer adds structure.',
+        },
+        {
+          id: 'look_distinctive',
+          label: 'Distinctive',
+          overallScore: 82,
+          items: [lookItem(blazer), lookItem(trousers), lookItem(whiteShirt)],
+          scores: {
+            color: 8,
+            occasion: 8,
+            compatibility: 9,
+          },
+          explanation:
+            'The darker blazer creates a stronger contrast against the lighter pieces while remaining versatile.',
+        },
+      ],
+    });
+  }),
+
+  // POST /v1/recommendations/:id/refine
+  http.post(`${BASE}/recommendations/:id/refine`, async ({ params, request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      lookId?: string;
+      action?: 'refine' | 'substitute';
+    };
+
+    return HttpResponse.json({
+      id: params.id,
+      status: 'complete',
+      lookId: body.lookId,
+      action: body.action,
+      message:
+        body.action === 'substitute'
+          ? 'Substitution applied to this look.'
+          : 'Refinement applied to this look.',
+    });
+  }),
+
   // GET /v1/planner/looks
   http.get(`${BASE}/planner/looks`, () => {
     return HttpResponse.json({
@@ -76,6 +156,7 @@ export const handlers = [
       events: MOCK_WEAR_EVENTS,
     });
   }),
+
   // POST /v1/planner/looks/:id/worn
   http.post(`${BASE}/planner/looks/:id/worn`, ({ params }) => {
     const savedLook = MOCK_SAVED_LOOKS.find((look) => look.id === params.id);
@@ -117,9 +198,23 @@ export const handlers = [
 //         code: 'COLOR_LOW_CONFIDENCE',
 //         message: 'We could not confidently identify the colour.',
 //         correlation_id: crypto.randomUUID(),
-//         details: {
-//           retryable: false,
-//         },
+//         details: { retryable: false },
+//       },
+//     },
+//     { status: 422 },
+//   );
+// });
+
+// Insufficient wardrobe on recommendations:
+//
+// http.post(`${BASE}/recommendations`, () => {
+//   return HttpResponse.json(
+//     {
+//       error: {
+//         code: 'INSUFFICIENT_WARDROBE',
+//         message: 'Not enough items to build a look for this occasion.',
+//         correlation_id: crypto.randomUUID(),
+//         details: { retryable: false },
 //       },
 //     },
 //     { status: 422 },
@@ -129,9 +224,7 @@ export const handlers = [
 // Empty wardrobe:
 //
 // http.get(`${BASE}/wardrobe/items`, () => {
-//   return HttpResponse.json({
-//     items: [],
-//   });
+//   return HttpResponse.json({ items: [] });
 // });
 
 // Server error:
@@ -143,9 +236,7 @@ export const handlers = [
 //         code: 'INTERNAL_ERROR',
 //         message: 'Something went wrong on our side.',
 //         correlation_id: crypto.randomUUID(),
-//         details: {
-//           retryable: true,
-//         },
+//         details: { retryable: true },
 //       },
 //     },
 //     { status: 500 },

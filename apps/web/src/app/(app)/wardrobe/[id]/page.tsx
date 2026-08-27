@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import type { ErrorEnvelope } from '@aiwardrobe/shared-web';
@@ -13,6 +13,7 @@ import type { WardrobeItem } from '../../../../features/wardrobe/mock-data';
 
 export default function WardrobeDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
 
   const [item, setItem] = useState<WardrobeItem | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ export default function WardrobeDetailPage() {
         setLoading(false);
       });
   }, [params.id]);
+
   function handleConfirmColor() {
     if (!item) {
       return;
@@ -53,7 +55,7 @@ export default function WardrobeDetailPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-6">
+    <div className="mx-auto w-full max-w-2xl">
       <AsyncState
         loading={loading}
         error={error}
@@ -84,9 +86,23 @@ export default function WardrobeDetailPage() {
                   <p className="mt-1 text-xl font-semibold">{item.color}</p>
 
                   {confirmedColor && (
-                    <p className="mt-2 text-sm text-green-700">
-                      Confirmed colour: {confirmedColor}
-                    </p>
+                    <div className="mt-2">
+                      <p className="text-sm text-green-700">Confirmed colour: {confirmedColor}</p>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => router.push('/wardrobe/new')}
+                        >
+                          Add another item
+                        </Button>
+
+                        <Button type="button" onClick={() => router.push('/wardrobe')}>
+                          Back to wardrobe
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -131,6 +147,6 @@ export default function WardrobeDetailPage() {
           </section>
         )}
       </AsyncState>
-    </main>
+    </div>
   );
 }
