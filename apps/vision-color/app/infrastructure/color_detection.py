@@ -42,6 +42,8 @@ def detect_dominant_color(image_bytes: bytes) -> tuple[int, int, int]:
     # The dominant color is the one with the most pixels.
     garment.sort(key=lambda item: item[0], reverse=True)
     return garment[0][1]
+
+
 def rgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
     """Convert an sRGB color to device-independent CIE LAB values."""
 
@@ -70,10 +72,18 @@ def rgb_to_lab(rgb: tuple[int, int, int]) -> tuple[float, float, float]:
 
 
 _REFERENCE_COLORS: dict[str, tuple[int, int, int]] = {
-    "black": (0, 0, 0), "white": (255, 255, 255), "gray": (128, 128, 128),
-    "red": (200, 30, 30), "green": (30, 140, 60), "blue": (40, 70, 160),
-    "navy": (20, 30, 80), "yellow": (220, 200, 40), "orange": (230, 130, 40),
-    "brown": (110, 70, 40), "pink": (230, 130, 160), "purple": (120, 50, 150),
+    "black": (0, 0, 0),
+    "white": (255, 255, 255),
+    "gray": (128, 128, 128),
+    "red": (200, 30, 30),
+    "green": (30, 140, 60),
+    "blue": (40, 70, 160),
+    "navy": (20, 30, 80),
+    "yellow": (220, 200, 40),
+    "orange": (230, 130, 40),
+    "brown": (110, 70, 40),
+    "pink": (230, 130, 160),
+    "purple": (120, 50, 150),
     "beige": (220, 200, 170),
 }
 
