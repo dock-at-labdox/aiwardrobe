@@ -13,7 +13,7 @@ without waiting on that decision.
 
 from itertools import product
 
-from apps.recommendation.domain.models import CandidateOutfit, WardrobeItem
+from app.domain.models import CandidateOutfit, WardrobeItem
 
 ANCHOR_CATEGORIES = {"layer", "one_piece", "bottom"}
 REQUIRED_SLOTS = {"top", "bottom", "footwear"}

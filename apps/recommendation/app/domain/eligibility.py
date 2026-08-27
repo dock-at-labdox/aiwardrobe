@@ -5,7 +5,7 @@ that does not survive is never scored, never shown, and never enters
 candidate generation.
 """
 
-from apps.recommendation.domain.models import Occasion, WardrobeItem
+from app.domain.models import Occasion, WardrobeItem
 
 UNAVAILABLE_STATUSES = {"laundry", "packed", "archived", "lent", "donated"}
 
