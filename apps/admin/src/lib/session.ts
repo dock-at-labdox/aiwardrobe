@@ -1,4 +1,4 @@
-export type AdminRole = 'Operator' | 'Engineering Lead';
+export type AdminRole = 'Operator' | 'Engineering Lead' | 'Viewer';
 
 export interface AdminSession {
   role: AdminRole;
@@ -7,6 +7,6 @@ export interface AdminSession {
 export async function getSession(): Promise<AdminSession> {
   // Temporary mock. Replace this implementation when backend auth is available.
   return {
-    role: 'Engineering Lead',
+    role: 'Viewer',
   };
 }

@@ -17,14 +17,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   if (session.role !== 'Operator' && session.role !== 'Engineering Lead') {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">Access denied</h1>
-          <p className="mt-2 text-gray-600">
-            You do not have permission to access the admin application.
-          </p>
-        </div>
-      </main>
+      <html lang="en">
+        <body>
+          <main className="flex min-h-screen items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold">Access denied</h1>
+              <p className="mt-2 text-gray-600">
+                You do not have permission to access the admin application.
+              </p>
+            </div>
+          </main>
+        </body>
+      </html>
     );
   }
 
