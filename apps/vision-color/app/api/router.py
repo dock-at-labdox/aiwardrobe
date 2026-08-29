@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 
-from app.infrastructure.background_removal import remove_background
+from app.domain.ports import BackgroundRemovalProvider
+from app.infrastructure.background_removal import get_background_removal_provider
 
 router = APIRouter()
 
@@ -15,6 +16,9 @@ router = APIRouter()
 @router.post("/v1/garments/remove-background", tags=["vision"])
 async def remove_background_endpoint(
     image: Annotated[UploadFile, File(description="Garment photo to process.")],
+    provider: Annotated[
+        BackgroundRemovalProvider, Depends(get_background_removal_provider)
+    ],
 ) -> Response:
     """Remove the background from an uploaded garment photo and return a PNG cutout."""
     if image.content_type is None or not image.content_type.startswith("image/"):
@@ -25,7 +29,7 @@ async def remove_background_endpoint(
         raise HTTPException(status_code=400, detail="Uploaded image is empty.")
 
     try:
-        cutout = remove_background(image_bytes)
+        cutout = await provider.remove_background(image_bytes)
     except Exception as exc:  # rembg/PIL raise on corrupt or unsupported images
         raise HTTPException(
             status_code=400,
