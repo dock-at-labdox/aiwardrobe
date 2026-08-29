@@ -41,10 +41,9 @@ That method enforces two things together:
 
 - The id must actually be registered. A fabricated id, a typo, or an
   id from a different registry raises `VersionNotFoundError`.
-- The version must not be a draft. An unreviewed draft raises
-  `DraftVersionNotAllowedError`. Only `approved`, `active`,
-  `superseded`, or `rolled-back` versions, all of which have passed
-  review at some point, are usable.
+- The version must be `approved` or `active`. An unreviewed draft
+  raises `DraftVersionNotAllowedError`; historical `superseded` and
+  `rolled-back` versions raise `VersionNotEligibleForScoringError`.
 
 This means there is no code path that lets an unreviewed or
 unregistered weight set silently produce a real recommendation.

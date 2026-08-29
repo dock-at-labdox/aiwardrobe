@@ -115,6 +115,22 @@ def test_passing_a_different_scoring_version_changes_which_version_is_reported()
     assert registry.get_active().version_id == "v1"
 
 
+def test_an_active_scoring_version_can_be_selected_explicitly() -> None:
+    from app.domain.versioning import create_default_registry
+
+    registry = create_default_registry()
+    occasion = make_occasion(required_item_ids=["itm_001"])
+
+    results = generate_recommendations(
+        MOCK_WARDROBE,
+        occasion,
+        scoring_version_id=registry.get_active().version_id,
+        registry=registry,
+    )
+
+    assert all(result["scoring_version"] == "v1" for result in results)
+
+
 def test_cannot_bypass_the_registry_with_a_draft_version() -> None:
     """A draft has not been reviewed by anyone. Passing its id must be
     rejected, not silently used, since that would let unreviewed
@@ -157,6 +173,71 @@ def test_cannot_bypass_the_registry_with_an_unregistered_version_id() -> None:
     with pytest.raises(VersionNotFoundError):
         generate_recommendations(
             MOCK_WARDROBE, occasion, scoring_version_id="v_fabricated_does_not_exist"
+        )
+
+
+def test_cannot_use_a_superseded_version_for_recommendations() -> None:
+    from app.domain.versioning import (
+        ScoringWeights,
+        VersionNotEligibleForScoringError,
+        create_default_registry,
+    )
+
+    registry = create_default_registry()
+    draft = registry.create_draft(
+        weights=ScoringWeights(
+            context_fit=0.5,
+            color_harmony=0.5,
+            formality_consistency=0.0,
+            silhouette_fit=0.0,
+            pattern_material=0.0,
+            personal_preference=0.0,
+            weather_practicality=0.0,
+            novelty=0.0,
+        ),
+        owner="test",
+        reason="create a superseded version",
+    )
+    registry.approve(draft.version_id, reviewer="test")
+    registry.activate(draft.version_id)
+
+    occasion = make_occasion(required_item_ids=["itm_001"])
+    with pytest.raises(VersionNotEligibleForScoringError):
+        generate_recommendations(
+            MOCK_WARDROBE, occasion, scoring_version_id="v1", registry=registry
+        )
+
+
+def test_cannot_use_a_rolled_back_version_for_recommendations() -> None:
+    from app.domain.versioning import (
+        ScoringWeights,
+        VersionNotEligibleForScoringError,
+        create_default_registry,
+    )
+
+    registry = create_default_registry()
+    draft = registry.create_draft(
+        weights=ScoringWeights(
+            context_fit=0.5,
+            color_harmony=0.5,
+            formality_consistency=0.0,
+            silhouette_fit=0.0,
+            pattern_material=0.0,
+            personal_preference=0.0,
+            weather_practicality=0.0,
+            novelty=0.0,
+        ),
+        owner="test",
+        reason="create a version to roll back",
+    )
+    registry.approve(draft.version_id, reviewer="test")
+    registry.activate(draft.version_id)
+    registry.rollback_to("v1")
+
+    occasion = make_occasion(required_item_ids=["itm_001"])
+    with pytest.raises(VersionNotEligibleForScoringError):
+        generate_recommendations(
+            MOCK_WARDROBE, occasion, scoring_version_id=draft.version_id, registry=registry
         )
 
 

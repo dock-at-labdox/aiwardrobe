@@ -86,6 +86,18 @@ class DraftVersionNotAllowedError(VersionError):
         self.version_id = version_id
 
 
+class VersionNotEligibleForScoringError(VersionError):
+    """Raised when a historical version is selected for scoring."""
+
+    def __init__(self, version_id: str, status: VersionStatus) -> None:
+        super().__init__(
+            f"Scoring version {version_id!r} is {status.value!r} and cannot "
+            "be used to generate recommendations."
+        )
+        self.version_id = version_id
+        self.status = status
+
+
 @dataclass(frozen=True)
 class ScoringWeights:
     """The eight PRD section 9.3 weight components. Frozen so that,
@@ -248,16 +260,19 @@ class VersionRegistry:
         score real recommendations with: it must be registered here
         (raises VersionNotFoundError otherwise, so a fabricated or
         unregistered ScoringVersion can never be used, only one this
-        registry actually issued) and it must not be a draft (raises
-        DraftVersionNotAllowedError otherwise, since an unreviewed
-        draft must never silently drive real recommendations). This
-        is the only sanctioned way to turn a version_id into
-        something the scoring pipeline is allowed to use; nothing in
-        the pipeline should call get() directly for that purpose.
+        registry actually issued) and it must be approved or active.
+        DraftVersionNotAllowedError identifies an unreviewed draft;
+        VersionNotEligibleForScoringError rejects historical
+        superseded and rolled-back versions. This is the only
+        sanctioned way to turn a version_id into something the
+        scoring pipeline is allowed to use; nothing in the pipeline
+        should call get() directly for that purpose.
         """
         version = self._require(version_id)
         if version.status == VersionStatus.DRAFT:
             raise DraftVersionNotAllowedError(version_id)
+        if version.status not in (VersionStatus.APPROVED, VersionStatus.ACTIVE):
+            raise VersionNotEligibleForScoringError(version_id, version.status)
         return version
 
     def get_active(self) -> ScoringVersion:

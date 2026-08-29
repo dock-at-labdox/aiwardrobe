@@ -228,4 +228,3 @@ def test_get_for_scoring_accepts_an_approved_version_not_yet_active() -> None:
     approved = registry.approve(draft.version_id, reviewer="pratyush")
     resolved = registry.get_for_scoring(approved.version_id)
     assert resolved.version_id == approved.version_id
-
