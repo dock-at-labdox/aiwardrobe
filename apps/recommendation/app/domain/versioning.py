@@ -20,6 +20,13 @@ than mutating the existing one in place.
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import Enum
+from math import isclose
+
+# How close the eight weights must sum to 1.0 to count as normalized.
+# Not zero, since float weight literals like 0.25 + 0.20 + ... can
+# accumulate tiny representation error even when the values are
+# "obviously" meant to sum to exactly 1.0.
+WEIGHT_SUM_TOLERANCE = 1e-6
 
 
 class VersionStatus(str, Enum):
@@ -32,6 +39,14 @@ class VersionStatus(str, Enum):
 
 class VersionError(Exception):
     """Base class for versioning errors."""
+
+
+class InvalidWeightsError(VersionError):
+    """Raised when a ScoringWeights instance would have a negative
+    weight, or its eight weights don't sum to 1.0. Raised from
+    ScoringWeights.__post_init__, so it is impossible to construct an
+    invalid ScoringWeights at all, not just discouraged.
+    """
 
 
 class VersionNotFoundError(VersionError):
@@ -56,6 +71,21 @@ class NoActiveVersionError(VersionError):
         super().__init__("No scoring version is currently active.")
 
 
+class DraftVersionNotAllowedError(VersionError):
+    """Raised when something tries to use a draft version to actually
+    generate a recommendation. Drafts are for review, never for real
+    scoring, since they haven't been approved by anyone yet.
+    """
+
+    def __init__(self, version_id: str) -> None:
+        super().__init__(
+            f"Scoring version {version_id!r} is still a draft and has not "
+            "been approved. Draft versions cannot be used to generate real "
+            "recommendations; approve it first."
+        )
+        self.version_id = version_id
+
+
 @dataclass(frozen=True)
 class ScoringWeights:
     """The eight PRD section 9.3 weight components. Frozen so that,
@@ -63,6 +93,12 @@ class ScoringWeights:
     changed in place. Changing a weight always means creating a new
     ScoringWeights and a new ScoringVersion around it, never editing
     this one.
+
+    Validated on construction: no weight may be negative, and the
+    eight weights must sum to 1.0 (within floating point tolerance).
+    This makes an invalid weight set impossible to create in the
+    first place, rather than something callers have to remember to
+    check afterward.
     """
 
     context_fit: float
@@ -73,6 +109,18 @@ class ScoringWeights:
     personal_preference: float
     weather_practicality: float
     novelty: float
+
+    def __post_init__(self) -> None:
+        for name, value in self.as_dict().items():
+            if value < 0:
+                raise InvalidWeightsError(
+                    f"Weight {name!r} cannot be negative, got {value}."
+                )
+        total = sum(self.as_dict().values())
+        if not isclose(total, 1.0, abs_tol=WEIGHT_SUM_TOLERANCE):
+            raise InvalidWeightsError(
+                f"Weights must sum to 1.0, got {total} instead."
+            )
 
     def as_dict(self) -> dict[str, float]:
         return {
@@ -194,6 +242,23 @@ class VersionRegistry:
 
     def get(self, version_id: str) -> ScoringVersion:
         return self._require(version_id)
+
+    def get_for_scoring(self, version_id: str) -> ScoringVersion:
+        """Resolve a version_id to a version that is actually safe to
+        score real recommendations with: it must be registered here
+        (raises VersionNotFoundError otherwise, so a fabricated or
+        unregistered ScoringVersion can never be used, only one this
+        registry actually issued) and it must not be a draft (raises
+        DraftVersionNotAllowedError otherwise, since an unreviewed
+        draft must never silently drive real recommendations). This
+        is the only sanctioned way to turn a version_id into
+        something the scoring pipeline is allowed to use; nothing in
+        the pipeline should call get() directly for that purpose.
+        """
+        version = self._require(version_id)
+        if version.status == VersionStatus.DRAFT:
+            raise DraftVersionNotAllowedError(version_id)
+        return version
 
     def get_active(self) -> ScoringVersion:
         if self._active_version_id is None:

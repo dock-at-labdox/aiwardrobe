@@ -14,6 +14,41 @@ constant in place has no history and no review step. This module
 fixes both, entirely in-process, no database or backend API involved.
 That comes later, when this service is wired up for real.
 
+## Validation
+
+A `ScoringWeights` instance is validated the moment it is created, not
+afterward:
+
+- No weight may be negative.
+- The eight weights must sum to 1.0 (within a small floating point
+  tolerance, since literals like `0.25 + 0.20 + ...` can pick up tiny
+  representation error even when they are obviously meant to total
+  exactly 1.0).
+
+Both checks raise `InvalidWeightsError` from inside
+`ScoringWeights.__post_init__`, so there is no way to construct an
+invalid weight set and have it sit around unnoticed; the error
+happens at the point of creation, not later when something tries to
+use it.
+
+## Draft versions can never drive a real recommendation
+
+`generate_recommendations` never accepts a bare `ScoringVersion`
+object. Instead, if you want to score against something other than
+the currently active version, you pass a `scoring_version_id: str`,
+and it is resolved through `registry.get_for_scoring(version_id)`.
+That method enforces two things together:
+
+- The id must actually be registered. A fabricated id, a typo, or an
+  id from a different registry raises `VersionNotFoundError`.
+- The version must not be a draft. An unreviewed draft raises
+  `DraftVersionNotAllowedError`. Only `approved`, `active`,
+  `superseded`, or `rolled-back` versions, all of which have passed
+  review at some point, are usable.
+
+This means there is no code path that lets an unreviewed or
+unregistered weight set silently produce a real recommendation.
+
 ## The lifecycle
 
 A scoring version moves through five statuses:
@@ -110,9 +145,15 @@ from app.domain.pipeline import generate_recommendations, get_default_registry
 # Uses whatever is currently active in the default registry.
 results = generate_recommendations(wardrobe, occasion)
 
-# Or score against a specific version explicitly, useful for testing
-# a draft or approved version before activating it for real.
-results = generate_recommendations(wardrobe, occasion, scoring_version=my_draft)
+# Or score against a specific version explicitly, by id, useful for
+# previewing an approved-but-not-yet-active version against real data
+# before activating it for everyone. The id must belong to a version
+# that has been approved at some point; passing a draft's id raises
+# DraftVersionNotAllowedError, and passing an id this registry never
+# issued raises VersionNotFoundError.
+results = generate_recommendations(
+    wardrobe, occasion, scoring_version_id=approved_version.version_id
+)
 ```
 
 Every result includes which version produced it:
@@ -130,7 +171,15 @@ new_version = registry.create_draft(weights=..., owner=..., reason=...)
 approved = registry.approve(new_version.version_id, reviewer=...)
 registry.activate(approved.version_id)
 # From this point on, generate_recommendations(...) without an
-# explicit scoring_version uses this new version.
+# explicit scoring_version_id uses this new version.
+```
+
+For tests, or anything that needs a fully isolated set of versions
+rather than sharing the module-level default, pass a separate
+registry instance directly:
+
+```python
+results = generate_recommendations(wardrobe, occasion, registry=my_own_registry)
 ```
 
 ## What this does not do yet

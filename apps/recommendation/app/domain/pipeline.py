@@ -16,14 +16,12 @@ from app.domain.explanation import (
 )
 from app.domain.models import Occasion, RecommendationResult, WardrobeItem
 from app.domain.scoring import score_all_candidates
-from app.domain.versioning import ScoringVersion, VersionRegistry, create_default_registry
+from app.domain.versioning import VersionRegistry, create_default_registry
 
 # Module-level default registry, seeded once with the existing PRD
 # 9.3 weights, approved and active. Callers that don't care about
 # versioning (existing tests, the demo script) get identical behavior
-# to before this change. Callers that do care can pass their own
-# scoring_version explicitly, for example to test against a draft
-# version before approving it.
+# to before this change.
 _default_registry = create_default_registry()
 
 
@@ -41,14 +39,29 @@ def generate_recommendations(
     wardrobe: list[WardrobeItem],
     occasion: Occasion,
     top_n: int = 3,
-    scoring_version: ScoringVersion | None = None,
+    scoring_version_id: str | None = None,
+    registry: VersionRegistry | None = None,
 ) -> list[RecommendationResult]:
-    """scoring_version defaults to the module-level default registry's
-    active version, so existing callers see no change in behavior.
-    Pass an explicit version to score against a specific draft,
-    approved-but-not-active, or previously active version instead.
+    """By default, scores against whichever registry's active version,
+    using the module-level default registry unless a different one is
+    passed explicitly (mainly useful for tests that need an isolated
+    registry rather than mutating the shared default).
+
+    Pass scoring_version_id to score against a specific version
+    instead of whatever is currently active, for example to preview
+    an approved-but-not-yet-active version against real data before
+    activating it for everyone. This always resolves through
+    registry.get_for_scoring, never accepts a bare ScoringVersion
+    object directly, so it is impossible to bypass the registry with
+    a fabricated or unregistered version, and impossible to use a
+    draft version, since get_for_scoring rejects both.
     """
-    active_version = scoring_version or _default_registry.get_active()
+    active_registry = registry or _default_registry
+
+    if scoring_version_id is not None:
+        scoring_version = active_registry.get_for_scoring(scoring_version_id)
+    else:
+        scoring_version = active_registry.get_active()
 
     conflicts = check_required_items(wardrobe, occasion)
     if conflicts:
@@ -63,7 +76,7 @@ def generate_recommendations(
             "No eligible combination fills all required slots."
         )
 
-    scored = score_all_candidates(candidates, wardrobe_by_id, occasion, active_version)
+    scored = score_all_candidates(candidates, wardrobe_by_id, occasion, scoring_version)
     top_candidates = rerank_for_diversity(scored, top_n=top_n)
 
     results: list[RecommendationResult] = []
@@ -79,7 +92,7 @@ def generate_recommendations(
                 overall_score=round(candidate.overall_score, 3),
                 score_components=vars(candidate.scores),
                 explanation=explanation,
-                scoring_version=active_version.version_id,
+                scoring_version=scoring_version.version_id,
             )
         )
 

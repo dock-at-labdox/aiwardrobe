@@ -11,6 +11,7 @@ import pytest
 
 from app.domain.versioning import (
     InvalidVersionTransitionError,
+    InvalidWeightsError,
     NoActiveVersionError,
     ScoringWeights,
     VersionNotFoundError,
@@ -21,13 +22,18 @@ from app.domain.versioning import (
 
 
 def make_weights(context_fit: float = 0.25) -> ScoringWeights:
+    # personal_preference absorbs whatever context_fit takes, so the
+    # eight weights always sum to exactly 1.0 regardless of the
+    # context_fit value a test passes in, since ScoringWeights now
+    # validates that on construction.
+    fixed_total = 0.20 + 0.15 + 0.12 + 0.10 + 0.05 + 0.03  # 0.65
     return ScoringWeights(
         context_fit=context_fit,
         color_harmony=0.20,
         formality_consistency=0.15,
         silhouette_fit=0.12,
         pattern_material=0.10,
-        personal_preference=0.10,
+        personal_preference=round(1.0 - fixed_total - context_fit, 10),
         weather_practicality=0.05,
         novelty=0.03,
     )
@@ -41,7 +47,41 @@ def test_create_draft_produces_draft_status() -> None:
     assert version.reviewer is None
 
 
-def test_weights_are_frozen_and_cannot_be_mutated() -> None:
+def test_negative_weight_is_rejected() -> None:
+    # Sums to exactly 1.0 despite the negative context_fit, so this
+    # isolates the negative-weight check specifically, rather than
+    # accidentally also tripping the separate sum-to-one check.
+    with pytest.raises(InvalidWeightsError):
+        ScoringWeights(
+            context_fit=-0.05,
+            color_harmony=0.50,
+            formality_consistency=0.15,
+            silhouette_fit=0.12,
+            pattern_material=0.10,
+            personal_preference=0.10,
+            weather_practicality=0.05,
+            novelty=0.03,
+        )
+
+
+def test_weights_that_do_not_sum_to_one_are_rejected() -> None:
+    with pytest.raises(InvalidWeightsError):
+        ScoringWeights(
+            context_fit=0.50,  # deliberately pushes the total well past 1.0
+            color_harmony=0.20,
+            formality_consistency=0.15,
+            silhouette_fit=0.12,
+            pattern_material=0.10,
+            personal_preference=0.10,
+            weather_practicality=0.05,
+            novelty=0.03,
+        )
+
+
+def test_weights_summing_to_exactly_one_are_accepted() -> None:
+    # Should not raise.
+    weights = make_weights()
+    assert sum(weights.as_dict().values()) == pytest.approx(1.0)
     weights = make_weights()
     with pytest.raises(FrozenInstanceError):
         weights.context_fit = 0.9  # type: ignore[misc]
@@ -165,3 +205,27 @@ def test_default_registry_seeds_an_active_version_matching_prd_weights() -> None
     assert active.weights.context_fit == 0.25
     assert active.weights.color_harmony == 0.20
     assert active.weights.novelty == 0.03
+
+
+def test_get_for_scoring_rejects_a_draft_version() -> None:
+    from app.domain.versioning import DraftVersionNotAllowedError
+
+    registry = VersionRegistry()
+    draft = registry.create_draft(make_weights(), owner="mahira", reason="testing")
+    with pytest.raises(DraftVersionNotAllowedError):
+        registry.get_for_scoring(draft.version_id)
+
+
+def test_get_for_scoring_rejects_an_unregistered_version_id() -> None:
+    registry = VersionRegistry()
+    with pytest.raises(VersionNotFoundError):
+        registry.get_for_scoring("v999_never_created")
+
+
+def test_get_for_scoring_accepts_an_approved_version_not_yet_active() -> None:
+    registry = VersionRegistry()
+    draft = registry.create_draft(make_weights(), owner="mahira", reason="testing")
+    approved = registry.approve(draft.version_id, reviewer="pratyush")
+    resolved = registry.get_for_scoring(approved.version_id)
+    assert resolved.version_id == approved.version_id
+
