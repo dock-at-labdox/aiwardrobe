@@ -72,3 +72,42 @@ def test_explanations_are_grounded_in_actual_items() -> None:
     results = generate_recommendations(MOCK_WARDROBE, occasion)
     for outfit in results:
         assert outfit["explanation"] != "Explanation withheld: failed grounding check."
+
+
+def test_recommendations_report_which_scoring_version_produced_them() -> None:
+    occasion = make_occasion(required_item_ids=["itm_001"])
+    results = generate_recommendations(MOCK_WARDROBE, occasion)
+    for outfit in results:
+        assert outfit["scoring_version"] == "v1"
+
+
+def test_passing_a_different_scoring_version_changes_which_version_is_reported() -> None:
+    from app.domain.pipeline import get_default_registry
+    from app.domain.versioning import ScoringWeights
+
+    registry = get_default_registry()
+    draft = registry.create_draft(
+        weights=ScoringWeights(
+            context_fit=0.5,
+            color_harmony=0.5,
+            formality_consistency=0.0,
+            silhouette_fit=0.0,
+            pattern_material=0.0,
+            personal_preference=0.0,
+            weather_practicality=0.0,
+            novelty=0.0,
+        ),
+        owner="test",
+        reason="testing an alternate weighting",
+    )
+    approved = registry.approve(draft.version_id, reviewer="test")
+
+    occasion = make_occasion(required_item_ids=["itm_001"])
+    results = generate_recommendations(MOCK_WARDROBE, occasion, scoring_version=approved)
+
+    for outfit in results:
+        assert outfit["scoring_version"] == approved.version_id
+    # The default registry's active version must be unaffected, since
+    # passing an explicit version should never change what "default"
+    # means for other callers.
+    assert registry.get_active().version_id == "v1"

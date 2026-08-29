@@ -20,6 +20,7 @@ from app.domain.models import (
     ScoredCandidateOutfit,
     WardrobeItem,
 )
+from app.domain.versioning import ScoringVersion, ScoringWeights
 
 # Tolerance, in degrees, for how close two hues must be to a named
 # harmonic relationship to count as harmonious. A starting value; needs
@@ -81,6 +82,28 @@ def score_context_fit(items: list[WardrobeItem], occasion: Occasion) -> float:
     return score_formality_consistency(items, occasion)
 
 
+def compute_overall_score(scores: ScoreComponents, weights: ScoringWeights) -> float:
+    """Weighted sum of the eight components, using a specific
+    versioned set of weights rather than a hardcoded constant. This
+    is the only place component scores and weights are combined, so a
+    version's weights only ever matter here, at scoring time.
+    """
+    component_values: dict[str, float] = {
+        "context_fit": scores.context_fit,
+        "color_harmony": scores.color_harmony,
+        "formality_consistency": scores.formality_consistency,
+        "silhouette_fit": scores.silhouette_fit,
+        "pattern_material": scores.pattern_material,
+        "personal_preference": scores.personal_preference,
+        "weather_practicality": scores.weather_practicality,
+        "novelty": scores.novelty,
+    }
+    weight_values = weights.as_dict()
+    return sum(
+        component_values[key] * weight for key, weight in weight_values.items()
+    )
+
+
 def score_candidate(
     candidate: CandidateOutfit,
     wardrobe_by_id: dict[str, WardrobeItem],
@@ -107,6 +130,7 @@ def score_all_candidates(
     candidates: list[CandidateOutfit],
     wardrobe_by_id: dict[str, WardrobeItem],
     occasion: Occasion,
+    scoring_version: ScoringVersion,
 ) -> list[ScoredCandidateOutfit]:
     """Takes unscored candidates in, returns scored candidates out, as
     a new list rather than mutating the input in place. This is what
@@ -114,11 +138,20 @@ def score_all_candidates(
     downstream can accidentally receive an unscored CandidateOutfit
     and treat it as scored, since this function's return type is
     ScoredCandidateOutfit, not the input type.
+
+    scoring_version determines the weights used to compute each
+    candidate's overall_score, so which version was active at call
+    time is exactly what ends up baked into the result.
     """
-    return [
-        ScoredCandidateOutfit(
-            item_ids=candidate.item_ids,
-            scores=score_candidate(candidate, wardrobe_by_id, occasion),
+    scored = []
+    for candidate in candidates:
+        components = score_candidate(candidate, wardrobe_by_id, occasion)
+        overall = compute_overall_score(components, scoring_version.weights)
+        scored.append(
+            ScoredCandidateOutfit(
+                item_ids=candidate.item_ids,
+                scores=components,
+                overall_score=overall,
+            )
         )
-        for candidate in candidates
-    ]
+    return scored

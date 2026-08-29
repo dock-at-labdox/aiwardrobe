@@ -16,6 +16,15 @@ from app.domain.explanation import (
 )
 from app.domain.models import Occasion, RecommendationResult, WardrobeItem
 from app.domain.scoring import score_all_candidates
+from app.domain.versioning import ScoringVersion, VersionRegistry, create_default_registry
+
+# Module-level default registry, seeded once with the existing PRD
+# 9.3 weights, approved and active. Callers that don't care about
+# versioning (existing tests, the demo script) get identical behavior
+# to before this change. Callers that do care can pass their own
+# scoring_version explicitly, for example to test against a draft
+# version before approving it.
+_default_registry = create_default_registry()
 
 
 class InsufficientWardrobeError(Exception):
@@ -29,8 +38,18 @@ class ConstraintConflictError(Exception):
 
 
 def generate_recommendations(
-    wardrobe: list[WardrobeItem], occasion: Occasion, top_n: int = 3
+    wardrobe: list[WardrobeItem],
+    occasion: Occasion,
+    top_n: int = 3,
+    scoring_version: ScoringVersion | None = None,
 ) -> list[RecommendationResult]:
+    """scoring_version defaults to the module-level default registry's
+    active version, so existing callers see no change in behavior.
+    Pass an explicit version to score against a specific draft,
+    approved-but-not-active, or previously active version instead.
+    """
+    active_version = scoring_version or _default_registry.get_active()
+
     conflicts = check_required_items(wardrobe, occasion)
     if conflicts:
         raise ConstraintConflictError(conflicting_item_ids=conflicts)
@@ -44,7 +63,7 @@ def generate_recommendations(
             "No eligible combination fills all required slots."
         )
 
-    scored = score_all_candidates(candidates, wardrobe_by_id, occasion)
+    scored = score_all_candidates(candidates, wardrobe_by_id, occasion, active_version)
     top_candidates = rerank_for_diversity(scored, top_n=top_n)
 
     results: list[RecommendationResult] = []
@@ -57,10 +76,20 @@ def generate_recommendations(
         results.append(
             RecommendationResult(
                 item_ids=candidate.item_ids,
-                overall_score=round(candidate.scores.overall(), 3),
+                overall_score=round(candidate.overall_score, 3),
                 score_components=vars(candidate.scores),
                 explanation=explanation,
+                scoring_version=active_version.version_id,
             )
         )
 
     return results
+
+
+def get_default_registry() -> VersionRegistry:
+    """Access to the module-level default registry, for callers (for
+    example an eventual admin API, or tests) that need to create,
+    approve, activate, or roll back versions used by default calls to
+    generate_recommendations.
+    """
+    return _default_registry

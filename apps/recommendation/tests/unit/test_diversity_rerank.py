@@ -10,11 +10,9 @@ from app.domain.models import ScoreComponents, ScoredCandidateOutfit
 
 
 def make_scored(item_ids: list[str], overall_score: float) -> ScoredCandidateOutfit:
-    # ScoreComponents.overall() is a weighted sum across eight fields;
-    # rather than reverse-engineer weights to hit an exact target, set
-    # every component to the same value, since 1.0 * value = value for
-    # a weighted sum whose weights sum to 1.0. This keeps the test's
-    # intent (a specific overall score) obvious.
+    # The exact component breakdown doesn't matter for these tests,
+    # only the resulting overall_score, which is now a direct field
+    # rather than something computed from weighted components.
     scores = ScoreComponents(
         context_fit=overall_score,
         color_harmony=overall_score,
@@ -25,7 +23,7 @@ def make_scored(item_ids: list[str], overall_score: float) -> ScoredCandidateOut
         weather_practicality=overall_score,
         novelty=overall_score,
     )
-    return ScoredCandidateOutfit(item_ids=item_ids, scores=scores)
+    return ScoredCandidateOutfit(item_ids=item_ids, scores=scores, overall_score=overall_score)
 
 
 def test_empty_list_returns_empty() -> None:
