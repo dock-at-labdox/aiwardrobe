@@ -32,7 +32,7 @@ def rerank_for_diversity(
     lambda_param: float = DEFAULT_LAMBDA,
 ) -> list[ScoredCandidateOutfit]:
     remaining = sorted(
-        scored_candidates, key=lambda c: c.scores.overall(), reverse=True
+        scored_candidates, key=lambda c: c.overall_score, reverse=True
     )
     if not remaining:
         return []
@@ -47,7 +47,7 @@ def rerank_for_diversity(
                 _similarity(candidate, chosen) for chosen in selected
             )
             mmr = (
-                lambda_param * candidate.scores.overall()
+                lambda_param * candidate.overall_score
                 - (1 - lambda_param) * max_similarity
             )
             if mmr > best_mmr:

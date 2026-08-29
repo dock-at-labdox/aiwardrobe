@@ -29,7 +29,7 @@ def build_structured_facts(
     items = [wardrobe_by_id[item_id] for item_id in candidate.item_ids]
     scores = candidate.scores
     facts = [
-        ExplanationFact("overall_score", f"{scores.overall():.2f}"),
+        ExplanationFact("overall_score", f"{candidate.overall_score:.2f}"),
         ExplanationFact("color_harmony_score", f"{scores.color_harmony:.2f}"),
         ExplanationFact(
             "formality_consistency_score",

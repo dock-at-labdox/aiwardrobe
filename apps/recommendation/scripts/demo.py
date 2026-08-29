@@ -26,4 +26,5 @@ if __name__ == "__main__":
         score_out_of_10 = outfit["overall_score"] * 10
         print(f"\nOutfit {i}: {outfit['item_ids']}")
         print(f"  Overall score: {score_out_of_10:.1f} / 10")
+        print(f"  Scoring version: {outfit['scoring_version']}")
         print(f"  Explanation: {outfit['explanation']}")

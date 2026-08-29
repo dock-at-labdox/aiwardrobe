@@ -8,11 +8,13 @@ wires them into ScoreComponents at all.
 
 from app.domain.models import CandidateOutfit, ColorProfile, Occasion, WardrobeItem
 from app.domain.scoring import (
+    compute_overall_score,
     score_all_candidates,
     score_candidate,
     score_color_harmony,
     score_formality_consistency,
 )
+from app.domain.versioning import create_default_registry
 
 
 def make_item(
@@ -110,9 +112,43 @@ def test_score_all_candidates_returns_scored_type_with_same_item_ids() -> None:
     items = {"itm_1": make_item("itm_1"), "itm_2": make_item("itm_2")}
     occasion = Occasion(id="o1", occasion_type="client_meeting", desired_formality="business")
     candidates = [CandidateOutfit(item_ids=["itm_1", "itm_2"])]
+    active_version = create_default_registry().get_active()
 
-    scored = score_all_candidates(candidates, items, occasion)
+    scored = score_all_candidates(candidates, items, occasion, active_version)
 
     assert len(scored) == 1
     assert scored[0].item_ids == ["itm_1", "itm_2"]
     assert scored[0].scores is not None
+    assert isinstance(scored[0].overall_score, float)
+
+
+def test_compute_overall_score_uses_given_versions_weights() -> None:
+    # A version whose weights put all their weight on one component
+    # should make that component the only thing that determines the
+    # overall score, since this is the mechanism the whole versioning
+    # system depends on: the pipeline must actually use the version
+    # it was given, not some hardcoded weight set.
+    from app.domain.models import ScoreComponents
+    from app.domain.versioning import ScoringWeights
+
+    scores = ScoreComponents(
+        context_fit=1.0,
+        color_harmony=0.0,
+        formality_consistency=0.0,
+        silhouette_fit=0.0,
+        pattern_material=0.0,
+        personal_preference=0.0,
+        weather_practicality=0.0,
+        novelty=0.0,
+    )
+    all_weight_on_context = ScoringWeights(
+        context_fit=1.0,
+        color_harmony=0.0,
+        formality_consistency=0.0,
+        silhouette_fit=0.0,
+        pattern_material=0.0,
+        personal_preference=0.0,
+        weather_practicality=0.0,
+        novelty=0.0,
+    )
+    assert compute_overall_score(scores, all_weight_on_context) == 1.0

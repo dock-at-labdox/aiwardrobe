@@ -44,7 +44,7 @@ def make_scored_candidate(item_ids: list[str]) -> ScoredCandidateOutfit:
         weather_practicality=0.8,
         novelty=0.5,
     )
-    return ScoredCandidateOutfit(item_ids=item_ids, scores=scores)
+    return ScoredCandidateOutfit(item_ids=item_ids, scores=scores, overall_score=0.75)
 
 
 def test_build_structured_facts_includes_every_item_and_score() -> None:

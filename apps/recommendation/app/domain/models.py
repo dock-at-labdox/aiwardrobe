@@ -5,7 +5,7 @@ WardrobeItem, ColorProfile, Occasion and Outfit entities in PRD section
 """
 
 from dataclasses import dataclass, field
-from typing import ClassVar, TypedDict
+from typing import TypedDict
 
 
 @dataclass
@@ -41,6 +41,13 @@ class Occasion:
 
 @dataclass
 class ScoreComponents:
+    """The eight raw component scores from PRD section 9.3, before any
+    weighting is applied. Weighting them into a single overall score
+    is done separately using an active ScoringVersion's weights (see
+    app/domain/versioning.py), not by this class, since the weights
+    themselves are now versioned rather than a fixed constant.
+    """
+
     context_fit: float
     color_harmony: float
     formality_consistency: float
@@ -49,35 +56,6 @@ class ScoreComponents:
     personal_preference: float
     weather_practicality: float
     novelty: float
-
-    # Weights from PRD section 9.3. Flagged there as an initial
-    # hypothesis, not final, so this constant is the one place to
-    # change during weight tuning against the golden set.
-    WEIGHTS: ClassVar[dict[str, float]] = {
-        "context_fit": 0.25,
-        "color_harmony": 0.20,
-        "formality_consistency": 0.15,
-        "silhouette_fit": 0.12,
-        "pattern_material": 0.10,
-        "personal_preference": 0.10,
-        "weather_practicality": 0.05,
-        "novelty": 0.03,
-    }
-
-    def overall(self) -> float:
-        components: dict[str, float] = {
-            "context_fit": self.context_fit,
-            "color_harmony": self.color_harmony,
-            "formality_consistency": self.formality_consistency,
-            "silhouette_fit": self.silhouette_fit,
-            "pattern_material": self.pattern_material,
-            "personal_preference": self.personal_preference,
-            "weather_practicality": self.weather_practicality,
-            "novelty": self.novelty,
-        }
-        return sum(
-            components[key] * weight for key, weight in self.WEIGHTS.items()
-        )
 
 
 @dataclass
@@ -94,16 +72,18 @@ class CandidateOutfit:
 
 @dataclass
 class ScoredCandidateOutfit:
-    """A CandidateOutfit that has been through scoring. scores is a
-    required, non-optional field here, not an Optional on the
-    unscored type, so every function downstream of scoring can rely
-    on candidate.scores existing without a None check, and the type
-    checker enforces that a caller cannot pass an unscored candidate
-    into a stage that expects one.
+    """A CandidateOutfit that has been through scoring. scores and
+    overall_score are both required, non-optional fields, so every
+    function downstream of scoring can rely on them existing without
+    a None check. overall_score is computed once, at scoring time,
+    from the active ScoringVersion's weights, and stored here so that
+    later stages (diversity rerank) never need to know about weights
+    or versions at all, only this single precomputed number.
     """
 
     item_ids: list[str]
     scores: ScoreComponents
+    overall_score: float
     explanation: str | None = None
 
 
@@ -113,10 +93,12 @@ class RecommendationResult(TypedDict):
     means every field's type is checked at every access site, rather
     than degrading to object and forcing isinstance checks wherever
     the result is consumed (demo.py, tests, and eventually the real
-    API layer).
+    API layer). scoring_version records exactly which scoring rule
+    version produced this result, per the versioning requirement.
     """
 
     item_ids: list[str]
     overall_score: float
     score_components: dict[str, float]
     explanation: str
+    scoring_version: str
