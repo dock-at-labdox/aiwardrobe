@@ -5,8 +5,8 @@ export interface AdminSession {
 }
 
 export async function getSession(): Promise<AdminSession> {
-  // Temporary mock. Replace this implementation when backend auth is available.
+  // Change to 'Viewer' to test the denied-access state.
   return {
-    role: 'Viewer',
+    role: 'Engineering Lead',
   };
 }
