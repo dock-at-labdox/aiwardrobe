@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import io
 
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.infrastructure.background_removal import remove_background
+from app.infrastructure.background_removal import get_background_removal_provider
 from app.main import app
 
 client = TestClient(app)
@@ -24,9 +25,10 @@ def _sample_png() -> bytes:
     return buffer.getvalue()
 
 
-def test_remove_background_returns_transparent_png() -> None:
-    """The worker removes the background and returns an image with transparency."""
-    result = remove_background(_sample_png())
+def test_provider_removes_background_returns_transparent_png() -> None:
+    """The provider removes the background and returns an image with transparency."""
+    provider = get_background_removal_provider()
+    result = asyncio.run(provider.remove_background(_sample_png()))
     output = Image.open(io.BytesIO(result))
     assert output.mode == "RGBA"
 
