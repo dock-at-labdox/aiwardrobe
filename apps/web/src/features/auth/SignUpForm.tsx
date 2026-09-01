@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function SignUpForm() {
+  const router = useRouter();
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -48,7 +51,9 @@ export default function SignUpForm() {
         email,
       });
 
-      setSuccess('Account details are valid. Authentication will be connected soon.');
+      setSuccess('Account created. Taking you to your privacy settings...');
+
+      router.push('/consent');
     } catch {
       setError('Sign-up failed. Please check your details and try again.');
     } finally {
@@ -61,7 +66,7 @@ export default function SignUpForm() {
       <div>
         <h1 className="text-3xl font-bold">Create account</h1>
 
-        <p className="mt-2 text-gray-600">Create an account to get started with AI Wardrobe.</p>
+        <p className="mt-2 text-gray-600">Create an account to get started with AttireIQ.</p>
       </div>
 
       {error && (
@@ -144,9 +149,9 @@ export default function SignUpForm() {
 
       <p className="text-center text-sm text-gray-600">
         Already have an account?{' '}
-        <a href="/sign-in" className="font-medium text-black underline">
+        <Link href="/sign-in" className="font-medium text-black underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </form>
   );

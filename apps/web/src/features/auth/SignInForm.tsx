@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 export default function SignInForm() {
+  const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -26,10 +28,11 @@ export default function SignInForm() {
     try {
       // OIDC provider is not decided yet.
       // Real authentication will be connected later.
-
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       console.log('Sign in:', { email });
+
+      router.push('/wardrobe');
     } catch {
       setError('Sign-in failed. Please check your credentials and try again.');
     } finally {
@@ -41,8 +44,7 @@ export default function SignInForm() {
     <form onSubmit={handleSubmit} className="mx-auto w-full max-w-md space-y-5">
       <div>
         <h1 className="text-3xl font-bold">Sign in</h1>
-
-        <p className="mt-2 text-gray-600">Sign in to continue to AI Wardrobe.</p>
+        <p className="mt-2 text-gray-600">Sign in to continue to AttireIQ.</p>
       </div>
 
       {error && (
@@ -58,7 +60,6 @@ export default function SignInForm() {
         <label htmlFor="email" className="mb-1 block text-sm font-medium">
           Email
         </label>
-
         <Input
           id="email"
           type="email"
@@ -72,7 +73,6 @@ export default function SignInForm() {
         <label htmlFor="password" className="mb-1 block text-sm font-medium">
           Password
         </label>
-
         <Input
           id="password"
           type="password"
