@@ -1,0 +1,1 @@
+export const IDENTITY_PROVIDER = Symbol('IDENTITY_PROVIDER');
