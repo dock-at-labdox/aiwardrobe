@@ -1,41 +1,72 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
+
+import { GetCurrentUserService } from '../../identity-consent/application/get-current-user.service';
+import { AuthenticatedIdentity } from '../../identity-consent/domain/identity-provider';
+import { AuthGuard } from '../../identity-consent/infrastructure/auth.guard';
 import { ProfilesService } from '../application/profiles.service';
 import { CreateStyleProfileDto } from './dto/create-style-profile.dto';
 import { UpdateStyleProfileDto } from './dto/update-style-profile.dto';
 import { CreateBodyProfileDto } from './dto/create-body-profile.dto';
 import { UpdateBodyProfileDto } from './dto/update-body-profile.dto';
 
+type AuthenticatedRequest = Request & {
+  user?: AuthenticatedIdentity;
+};
+
 @Controller('profiles')
+@UseGuards(AuthGuard)
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) {}
+  constructor(
+    private readonly profilesService: ProfilesService,
+    private readonly getCurrentUserService: GetCurrentUserService,
+  ) {}
 
-  @Get(':userId/style')
-  getStyleProfile(@Param('userId') userId: string) {
-    return this.profilesService.getStyleProfile(userId);
+  @Get('style')
+  async getStyleProfile(@Req() request: AuthenticatedRequest) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.getStyleProfile(user.id);
   }
 
-  @Post(':userId/style')
-  createStyleProfile(@Param('userId') userId: string, @Body() dto: CreateStyleProfileDto) {
-    return this.profilesService.createStyleProfile(userId, dto);
+  @Post('style')
+  async createStyleProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: CreateStyleProfileDto,
+  ) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.createStyleProfile(user.id, dto);
   }
 
-  @Patch(':userId/style')
-  updateStyleProfile(@Param('userId') userId: string, @Body() dto: UpdateStyleProfileDto) {
-    return this.profilesService.updateStyleProfile(userId, dto);
+  @Patch('style')
+  async updateStyleProfile(
+    @Req() request: AuthenticatedRequest,
+    @Body() dto: UpdateStyleProfileDto,
+  ) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.updateStyleProfile(user.id, dto);
   }
 
-  @Get(':userId/body')
-  getBodyProfile(@Param('userId') userId: string) {
-    return this.profilesService.getBodyProfile(userId);
+  @Get('body')
+  async getBodyProfile(@Req() request: AuthenticatedRequest) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.getBodyProfile(user.id);
   }
 
-  @Post(':userId/body')
-  createBodyProfile(@Param('userId') userId: string, @Body() dto: CreateBodyProfileDto) {
-    return this.profilesService.createBodyProfile(userId, dto);
+  @Post('body')
+  async createBodyProfile(@Req() request: AuthenticatedRequest, @Body() dto: CreateBodyProfileDto) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.createBodyProfile(user.id, dto);
   }
 
-  @Patch(':userId/body')
-  updateBodyProfile(@Param('userId') userId: string, @Body() dto: UpdateBodyProfileDto) {
-    return this.profilesService.updateBodyProfile(userId, dto);
+  @Patch('body')
+  async updateBodyProfile(@Req() request: AuthenticatedRequest, @Body() dto: UpdateBodyProfileDto) {
+    const user = await this.getCurrentUserService.execute(request.user!);
+
+    return this.profilesService.updateBodyProfile(user.id, dto);
   }
 }
