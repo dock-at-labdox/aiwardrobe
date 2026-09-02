@@ -12,7 +12,8 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "incremental": true,
-    "noImplicitOverride": true
+    "noImplicitOverride": true,
+    "types": ["jest"]
   },
   "include": ["src/**/*.ts"]
 }
