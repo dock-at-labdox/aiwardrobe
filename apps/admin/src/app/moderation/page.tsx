@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
@@ -52,7 +50,15 @@ export default function ModerationPage() {
               <div key={item.id} className="border-b py-4 last:border-0">
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{item.type}</p>
-                  <span className="text-sm">{item.status}</span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium ${
+                      item.status === 'FLAGGED'
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : 'border-gray-200 bg-gray-50 text-gray-700'
+                    }`}
+                  >
+                    {item.status === 'FLAGGED' ? '[!] Flagged' : 'Pending'}
+                  </span>
                 </div>
                 <p className="mt-1 text-sm text-gray-600">{item.description}</p>
               </div>
