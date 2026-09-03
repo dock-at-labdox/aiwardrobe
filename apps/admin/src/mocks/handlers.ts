@@ -17,4 +17,38 @@ export const handlers = [
       ],
     });
   }),
+  http.get(`${BASE}/admin/moderation/queue`, () => {
+    return HttpResponse.json({
+      items: [
+        {
+          id: 'mod_001',
+          type: 'Wardrobe Item',
+          status: 'PENDING',
+          description: 'Item awaiting moderation review.',
+        },
+        {
+          id: 'mod_002',
+          type: 'User Content',
+          status: 'FLAGGED',
+          description: 'Content flagged for operational review.',
+        },
+      ],
+    });
+  }),
+  http.get(`${BASE}/admin/reports/overview`, () => {
+    return HttpResponse.json({
+      totalUsers: 124,
+      wardrobeItems: 486,
+      recommendations: 312,
+      moderationPending: 7,
+    });
+  }),
+  http.get(`${BASE}/admin/reports/overview`, () => {
+    return HttpResponse.json({
+      totalUsers: 128,
+      activeUsers: 96,
+      wardrobeItems: 742,
+      moderationPending: 7,
+    });
+  }),
 ];

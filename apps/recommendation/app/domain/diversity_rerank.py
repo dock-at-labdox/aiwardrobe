@@ -5,7 +5,7 @@ whatever has already been picked, so the final list is safe, balanced
 and distinctive per REC-002, not three near-duplicates.
 """
 
-from apps.recommendation.domain.models import CandidateOutfit
+from app.domain.models import ScoredCandidateOutfit
 
 # Closer to 1.0 favors raw score, closer to 0.5 favors distinctiveness.
 # Since our candidates are already pre-filtered by hard eligibility
@@ -15,7 +15,7 @@ from apps.recommendation.domain.models import CandidateOutfit
 DEFAULT_LAMBDA = 0.7
 
 
-def _similarity(a: CandidateOutfit, b: CandidateOutfit) -> float:
+def _similarity(a: ScoredCandidateOutfit, b: ScoredCandidateOutfit) -> float:
     """Jaccard overlap of item IDs, a cheap stand-in for embedding
     distance between outfits. Fine for an MVP; revisit once the
     embedding benchmark is done.
@@ -27,12 +27,12 @@ def _similarity(a: CandidateOutfit, b: CandidateOutfit) -> float:
 
 
 def rerank_for_diversity(
-    scored_candidates: list[CandidateOutfit],
+    scored_candidates: list[ScoredCandidateOutfit],
     top_n: int = 3,
     lambda_param: float = DEFAULT_LAMBDA,
-) -> list[CandidateOutfit]:
+) -> list[ScoredCandidateOutfit]:
     remaining = sorted(
-        scored_candidates, key=lambda c: c.scores.overall(), reverse=True
+        scored_candidates, key=lambda c: c.overall_score, reverse=True
     )
     if not remaining:
         return []
@@ -40,20 +40,25 @@ def rerank_for_diversity(
     selected = [remaining.pop(0)]
 
     while remaining and len(selected) < top_n:
-        best_candidate = None
+        best_candidate: ScoredCandidateOutfit | None = None
         best_mmr = float("-inf")
         for candidate in remaining:
             max_similarity = max(
                 _similarity(candidate, chosen) for chosen in selected
             )
             mmr = (
-                lambda_param * candidate.scores.overall()
+                lambda_param * candidate.overall_score
                 - (1 - lambda_param) * max_similarity
             )
             if mmr > best_mmr:
                 best_mmr = mmr
                 best_candidate = candidate
 
+        # remaining is non-empty here (loop condition), so at least one
+        # candidate was compared and best_candidate was set; this
+        # assertion makes that guarantee explicit for the type checker
+        # rather than silently trusting it.
+        assert best_candidate is not None
         selected.append(best_candidate)
         remaining.remove(best_candidate)
 

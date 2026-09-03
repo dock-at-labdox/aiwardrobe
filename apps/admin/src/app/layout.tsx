@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import MswProvider from '@/mocks/MswProvider';
 import { ReactNode } from 'react';
 import { AppProviders } from '@aiwardrobe/shared-web';
@@ -36,7 +37,20 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en">
       <body>
         <MswProvider>
-          <AppProviders>{children}</AppProviders>
+          <AppProviders>
+            <header className="border-b px-6 py-4">
+              <nav className="mx-auto flex max-w-7xl items-center gap-6">
+                <Link href="/" className="font-semibold">
+                  AI Wardrobe Admin
+                </Link>
+                <Link href="/support">Support</Link>
+                <Link href="/moderation">Moderation</Link>
+                <Link href="/reports">Reports</Link>
+              </nav>
+            </header>
+
+            {children}
+          </AppProviders>
         </MswProvider>
       </body>
     </html>

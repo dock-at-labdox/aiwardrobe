@@ -182,6 +182,84 @@ export const handlers = [
 
     return HttpResponse.json(wearEvent, { status: 201 });
   }),
+
+  // POST /v1/tryon/requests
+  // Mock Try-On endpoint for frontend development.
+  //
+  // Testing behavior:
+  // - itemId containing "quota"   -> QUOTA_EXCEEDED
+  // - itemId containing "fidelity" -> TRYON_FIDELITY_FAILED
+  // - invalid source photo       -> TRYON_INPUT_INVALID
+  // - otherwise                  -> success
+  //
+  // This keeps TryOn.tsx independent from mock-only test flags.
+  http.post(`${BASE}/tryon/requests`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      itemId?: string;
+      sourcePhoto?: {
+        fileName?: string;
+        contentType?: string;
+        size?: number;
+      };
+    };
+
+    const itemId = body.itemId ?? '';
+    const sourcePhoto = body.sourcePhoto;
+
+    // Invalid source photo
+    if (!sourcePhoto?.contentType || !sourcePhoto.contentType.startsWith('image/')) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'TRYON_INPUT_INVALID',
+            message: 'Please upload a clear, well-lit source photo.',
+            correlation_id: crypto.randomUUID(),
+            retryable: false,
+          },
+        },
+        { status: 422 },
+      );
+    }
+
+    // Test QUOTA_EXCEEDED
+    if (itemId.includes('quota')) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'QUOTA_EXCEEDED',
+            message: 'Your Try-On limit has been reached.',
+            correlation_id: crypto.randomUUID(),
+            retryable: false,
+          },
+        },
+        { status: 429 },
+      );
+    }
+
+    // Test TRYON_FIDELITY_FAILED
+    if (itemId.includes('fidelity')) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'TRYON_FIDELITY_FAILED',
+            message: 'Try-On could not meet the quality bar.',
+            correlation_id: crypto.randomUUID(),
+            retryable: false,
+          },
+        },
+        { status: 422 },
+      );
+    }
+
+    // Default successful Try-On response
+    return HttpResponse.json({
+      id: crypto.randomUUID(),
+      status: 'complete',
+      remainingQuota: 2,
+      itemId,
+      resultUrl: 'https://mock-storage.local/tryon/result.jpg',
+    });
+  }),
 ];
 
 // -----------------------------------------------------------------------------

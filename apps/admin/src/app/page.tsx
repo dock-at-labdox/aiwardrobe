@@ -30,19 +30,19 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg border p-5">
+          <Link href="/support" className="block rounded-lg border p-5 hover:bg-gray-50">
             <h3 className="font-semibold">Support Lookups</h3>
             <p className="mt-2 text-sm text-gray-600">
               Find users, wardrobe items, and recommendation results.
             </p>
-          </div>
+          </Link>
 
-          <div className="rounded-lg border p-5">
+          <Link href="/moderation" className="block rounded-lg border p-5 hover:bg-gray-50">
             <h3 className="font-semibold">Moderation Review</h3>
             <p className="mt-2 text-sm text-gray-600">
               Review moderation items and take operational actions.
             </p>
-          </div>
+          </Link>
 
           <div className="rounded-lg border p-5">
             <h3 className="font-semibold">Operational Reporting</h3>

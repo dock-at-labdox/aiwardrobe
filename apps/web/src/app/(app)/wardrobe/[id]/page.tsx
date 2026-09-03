@@ -78,6 +78,13 @@ export default function WardrobeDetailPage() {
                 <div>
                   <h1 className="text-2xl font-bold">{item.name}</h1>
                   <p className="mt-1 text-sm text-gray-500">{item.category}</p>
+                  <Button
+                    type="button"
+                    onClick={() => router.push(`/try-on/${item.id}`)}
+                    className="w-full"
+                  >
+                    Try it on
+                  </Button>
                 </div>
 
                 <div className="rounded-lg border p-4">
