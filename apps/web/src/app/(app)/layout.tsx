@@ -1,13 +1,12 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { Shirt, Calendar, User, LogOut } from 'lucide-react';
-
+import { Shirt, Calendar, User, LogOut, BarChart3 } from 'lucide-react';
 const NAV_ITEMS = [
   { href: '/wardrobe', label: 'Wardrobe', icon: Shirt },
   { href: '/planner', label: 'Planner', icon: Calendar },
+  { href: '/insights', label: 'Insights', icon: BarChart3 },
   { href: '/profile', label: 'Profile', icon: User },
 ];
-
 const SIGN_OUT_CLASS =
   'flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground';
 
