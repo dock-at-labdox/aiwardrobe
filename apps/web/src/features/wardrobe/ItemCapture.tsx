@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, useRef, useState } from 'react';
+import { getColorConfidence } from './color-confidence';
 
 import type { ErrorEnvelope } from '@aiwardrobe/shared-schemas';
 import { ApiClient, AsyncState } from '@aiwardrobe/shared-web';
@@ -18,10 +19,6 @@ type UploadSession = {
 
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
-// Change to true when you want to test the low-confidence error state.
-const MOCK_LOW_COLOR_CONFIDENCE = false;
-
 const apiClient = new ApiClient('');
 
 function createErrorEnvelope(code: string, message: string): ErrorEnvelope {
@@ -133,7 +130,7 @@ export default function ItemCapture() {
         fileName: selectedFile.name,
       });
 
-      const colorConfidence = MOCK_LOW_COLOR_CONFIDENCE ? 0.4 : 0.92;
+      const colorConfidence = getColorConfidence();
 
       if (colorConfidence < 0.5) {
         throw createErrorEnvelope(
