@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Shirt, Sparkles, Camera } from 'lucide-react';
 
 const FEATURES = [
@@ -19,6 +18,12 @@ const FEATURES = [
   },
 ];
 
+const PRIMARY_BUTTON =
+  'inline-flex h-11 items-center justify-center rounded-lg bg-primary px-8 text-sm font-medium text-primary-foreground transition hover:opacity-90';
+
+const SECONDARY_BUTTON =
+  'inline-flex h-11 items-center justify-center rounded-lg border px-8 text-sm font-medium transition hover:bg-muted/50';
+
 export default function WelcomePage() {
   return (
     <main className="min-h-screen bg-muted/30">
@@ -35,25 +40,19 @@ export default function WelcomePage() {
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/sign-up"
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-8 text-sm font-medium text-primary-foreground transition hover:opacity-90"
-            >
+            <a href="/auth/login?screen_hint=signup" className={PRIMARY_BUTTON}>
               Get started
-            </Link>
-
-            <Link
-              href="/sign-in"
-              className="inline-flex h-11 items-center justify-center rounded-lg border px-8 text-sm font-medium transition hover:bg-muted/50"
-            >
+            </a>
+            <a href="/auth/login" className={SECONDARY_BUTTON}>
               Sign in
-            </Link>
+            </a>
           </div>
         </div>
 
         <div className="mt-16 grid gap-6 sm:grid-cols-3">
           {FEATURES.map((feature) => {
             const Icon = feature.icon;
+
             return (
               <div key={feature.title} className="rounded-xl border bg-card p-5">
                 <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
