@@ -5,7 +5,7 @@ import { HealthModule } from './health/health.module';
 import { PlaceholderModulesModule } from './modules/placeholder-modules.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { IdentityConsentModule } from './modules/identity-consent/identity-consent.module';
-
+import { WardrobeModule } from './modules/wardrobe/wardrobe.module';
 @Module({
   imports: [
     ConfigModule,
@@ -14,6 +14,7 @@ import { IdentityConsentModule } from './modules/identity-consent/identity-conse
     HealthModule,
     PlaceholderModulesModule,
     IdentityConsentModule,
+    WardrobeModule,
   ],
 })
 export class AppModule {}
