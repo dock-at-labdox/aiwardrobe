@@ -119,6 +119,9 @@ importers:
       joi:
         specifier: 18.2.3
         version: 18.2.3
+      jose:
+        specifier: ^6.2.10
+        version: 6.2.10
       reflect-metadata:
         specifier: 0.2.2
         version: 0.2.2
@@ -4686,6 +4689,7 @@ packages:
         integrity: sha512-QePbBFMJFjgmlE+cXAlbHZbHpdFVS2E/6vzCy7aKlebddvl1vadiC4JFV5u/wqTkNUwEV8WrQi257jf5f06hrg==,
       }
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -5982,6 +5986,12 @@ packages:
         integrity: sha512-N5A3KTWQpPWT4ExxxPlUx7WmykGXRzhNidWhV41d6Abu9YfI2NyWCJuxdPnslJCPWtbRpSVOWSnSS6GakLM/Rg==,
       }
     engines: { node: '>= 20' }
+
+  jose@6.2.10:
+    resolution:
+      {
+        integrity: sha512-iiW7J9qRFlGxvCOIBDBDxFePQSn7ZMAnrYGhrrOo6siO/MIqwfyilLR27pkfDgUk+raLuzADS8A3S/KLBisc0g==,
+      }
 
   js-tokens@4.0.0:
     resolution:
@@ -12564,6 +12574,8 @@ snapshots:
       '@hapi/tlds': 1.1.7
       '@hapi/topo': 6.0.2
       '@standard-schema/spec': 1.1.0
+
+  jose@6.2.10: {}
 
   js-tokens@4.0.0: {}
 
