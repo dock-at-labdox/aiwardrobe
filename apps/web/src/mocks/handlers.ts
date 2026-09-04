@@ -21,6 +21,12 @@ function lookItem(item: (typeof MOCK_WARDROBE_ITEMS)[number]) {
 }
 
 export const handlers = [
+  http.get('/api/token', () => {
+    return HttpResponse.json({ token: null });
+  }),
+
+  // existing handlers...
+
   // GET /v1/wardrobe/items
   http.get(`${BASE}/wardrobe/items`, () => {
     return HttpResponse.json({
@@ -184,80 +190,85 @@ export const handlers = [
   }),
 
   // POST /v1/tryon/requests
-  // Mock Try-On endpoint for frontend development.
-  //
-  // Testing behavior:
-  // - itemId containing "quota"   -> QUOTA_EXCEEDED
-  // - itemId containing "fidelity" -> TRYON_FIDELITY_FAILED
-  // - invalid source photo       -> TRYON_INPUT_INVALID
-  // - otherwise                  -> success
-  //
-  // This keeps TryOn.tsx independent from mock-only test flags.
-  http.post(`${BASE}/tryon/requests`, async ({ request }) => {
-    const body = (await request.json().catch(() => ({}))) as {
-      itemId?: string;
-      sourcePhoto?: {
-        fileName?: string;
-        contentType?: string;
-        size?: number;
-      };
-    };
-
-    const itemId = body.itemId ?? '';
-    const sourcePhoto = body.sourcePhoto;
-
-    // Invalid source photo
-    if (!sourcePhoto?.contentType || !sourcePhoto.contentType.startsWith('image/')) {
-      return HttpResponse.json(
-        {
-          error: {
-            code: 'TRYON_INPUT_INVALID',
-            message: 'Please upload a clear, well-lit source photo.',
-            correlation_id: crypto.randomUUID(),
-            retryable: false,
-          },
-        },
-        { status: 422 },
-      );
-    }
-
-    // Test QUOTA_EXCEEDED
-    if (itemId.includes('quota')) {
-      return HttpResponse.json(
-        {
-          error: {
-            code: 'QUOTA_EXCEEDED',
-            message: 'Your Try-On limit has been reached.',
-            correlation_id: crypto.randomUUID(),
-            retryable: false,
-          },
-        },
-        { status: 429 },
-      );
-    }
-
-    // Test TRYON_FIDELITY_FAILED
-    if (itemId.includes('fidelity')) {
-      return HttpResponse.json(
-        {
-          error: {
-            code: 'TRYON_FIDELITY_FAILED',
-            message: 'Try-On could not meet the quality bar.',
-            correlation_id: crypto.randomUUID(),
-            retryable: false,
-          },
-        },
-        { status: 422 },
-      );
-    }
-
-    // Default successful Try-On response
+  http.post(`${BASE}/tryon/requests`, () => {
     return HttpResponse.json({
       id: crypto.randomUUID(),
-      status: 'complete',
-      remainingQuota: 2,
-      itemId,
-      resultUrl: 'https://mock-storage.local/tryon/result.jpg',
+      status: 'completed',
+      imageUrl: MOCK_WARDROBE_ITEMS[0].imageUrl,
+      quotaRemaining: 2,
+      quotaTotal: 5,
+    });
+  }),
+
+  // GET /v1/tryon/requests/:id
+  http.get(`${BASE}/tryon/requests/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      status: 'completed',
+      imageUrl: MOCK_WARDROBE_ITEMS[0].imageUrl,
+      quotaRemaining: 2,
+      quotaTotal: 5,
+    });
+  }),
+
+  // GET /v1/me
+  http.get(`${BASE}/me`, () => {
+    return HttpResponse.json({
+      id: 'usr_1',
+      name: 'Atharv Pratap Singh',
+      email: 'atharv@labdox.in',
+      createdAt: '2026-08-10T00:00:00.000Z',
+    });
+  }),
+
+  // DELETE /v1/me
+  http.delete(`${BASE}/me`, () => {
+    return HttpResponse.json({
+      status: 'scheduled',
+      deletesAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    });
+  }),
+
+  // GET /v1/consents
+  http.get(`${BASE}/consents`, () => {
+    return HttpResponse.json({
+      wardrobeProcessing: true,
+      personalization: true,
+      tryOn: false,
+      analytics: false,
+    });
+  }),
+
+  // PATCH /v1/consents
+  http.patch(`${BASE}/consents`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Record<string, boolean>;
+
+    return HttpResponse.json(body);
+  }),
+
+  // POST /v1/privacy/exports
+  http.post(`${BASE}/privacy/exports`, () => {
+    return HttpResponse.json({
+      id: crypto.randomUUID(),
+      status: 'preparing',
+      requestedAt: new Date().toISOString(),
+    });
+  }),
+
+  // GET /v1/insights
+  http.get(`${BASE}/insights`, () => {
+    return HttpResponse.json({
+      totalItems: MOCK_WARDROBE_ITEMS.length,
+      itemsWornThisMonth: 8,
+      neverWorn: 3,
+      mostWorn: { name: blazer.name, timesWorn: 6 },
+      byCategory: [
+        { category: 'Tops', count: 4 },
+        { category: 'Bottoms', count: 3 },
+        { category: 'Outerwear', count: 3 },
+        { category: 'Footwear', count: 2 },
+        { category: 'Accessories', count: 2 },
+      ],
     });
   }),
 ];
@@ -296,6 +307,22 @@ export const handlers = [
 //       },
 //     },
 //     { status: 422 },
+//   );
+// });
+
+// Try-on quota exceeded:
+//
+// http.post(`${BASE}/tryon/requests`, () => {
+//   return HttpResponse.json(
+//     {
+//       error: {
+//         code: 'QUOTA_EXCEEDED',
+//         message: 'You have used all your try-ons for this month.',
+//         correlation_id: crypto.randomUUID(),
+//         details: { retryable: false },
+//       },
+//     },
+//     { status: 429 },
 //   );
 // });
 

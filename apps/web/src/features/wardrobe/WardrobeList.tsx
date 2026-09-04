@@ -3,22 +3,28 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { ApiClient, type ErrorEnvelope } from '@aiwardrobe/shared-web';
+import { getToken } from '@/lib/get-token';
 
-import { Button } from '@/components/ui/button';
-import { AsyncState } from '@aiwardrobe/shared-web';
 import type { WardrobeItem } from './mock-data';
+
+const CATEGORIES = ['All', 'Tops', 'Bottoms', 'Outerwear', 'Footwear', 'Accessories'];
+const ROW_HEIGHT = 260;
+const COLUMN_COUNT = 4;
 
 export default function WardrobeList() {
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorEnvelope | null>(null);
-  const [category, setCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const apiClient = new ApiClient();
+    const apiClient = new ApiClient(undefined, { tokenProvider: getToken });
 
     apiClient
       .get<{ items: WardrobeItem[] }>('/v1/wardrobe/items')
@@ -34,48 +40,54 @@ export default function WardrobeList() {
       });
   }, []);
 
-  const categories = useMemo(
-    () => ['All', ...new Set(items.map((item) => item.category))],
-    [items],
-  );
-
   const filteredItems = useMemo(() => {
-    if (category === 'All') {
+    if (selectedCategory === 'All') {
       return items;
     }
 
-    return items.filter((item) => item.category === category);
-  }, [items, category]);
+    return items.filter((item) => item.category === selectedCategory);
+  }, [items, selectedCategory]);
 
-  const parentRef = useRef<HTMLDivElement>(null);
-
-  const rowCount = Math.ceil(filteredItems.length / 2);
+  const rowCount = Math.ceil(filteredItems.length / COLUMN_COUNT);
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
     count: rowCount,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 220,
-    overscan: 4,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: 3,
   });
 
+  // Reset scroll when the filter changes, otherwise a shorter list
+  // can be left scrolled past its end.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+    rowVirtualizer.scrollToIndex(0);
+  }, [selectedCategory, rowVirtualizer]);
+
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6">
+    <div>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">My Wardrobe</h1>
-        <p className="mt-2 text-gray-600">Browse and manage your wardrobe items.</p>
+        <h1 className="text-3xl font-bold">Your wardrobe</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
+        </p>
       </div>
 
-      <div className="mb-6 flex gap-2 overflow-x-auto">
-        {categories.map((itemCategory) => (
-          <Button
-            key={itemCategory}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {CATEGORIES.map((category) => (
+          <button
+            key={category}
             type="button"
-            variant={category === itemCategory ? 'default' : 'outline'}
-            onClick={() => setCategory(itemCategory)}
+            onClick={() => setSelectedCategory(category)}
+            className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+              selectedCategory === category
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'hover:bg-muted/50'
+            }`}
           >
-            {itemCategory}
-          </Button>
+            {category}
+          </button>
         ))}
       </div>
 
@@ -86,24 +98,29 @@ export default function WardrobeList() {
         loadingMessage="Loading your wardrobe..."
         emptyMessage="Add your first item to start building your wardrobe."
       >
-        <div ref={parentRef} className="h-[70vh] overflow-auto">
+        <div ref={scrollRef} className="h-[600px] overflow-auto">
           <div
-            className="relative w-full"
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
+              position: 'relative',
             }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const startIndex = virtualRow.index * 2;
-              const rowItems = filteredItems.slice(startIndex, startIndex + 2);
+              const startIndex = virtualRow.index * COLUMN_COUNT;
+              const rowItems = filteredItems.slice(startIndex, startIndex + COLUMN_COUNT);
 
               return (
                 <div
                   key={virtualRow.key}
-                  className="absolute left-0 grid w-full grid-cols-2 gap-4"
                   style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
+                  className="grid grid-cols-2 gap-4 pb-4 sm:grid-cols-3 lg:grid-cols-4"
                 >
                   {rowItems.map((item) => (
                     <Link
@@ -120,8 +137,8 @@ export default function WardrobeList() {
                       />
 
                       <div className="p-3">
-                        <h2 className="font-medium">{item.name}</h2>
-                        <p className="mt-1 text-sm text-gray-500">
+                        <p className="truncate text-sm font-medium">{item.name}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {item.category} · {item.color}
                         </p>
                       </div>
@@ -133,6 +150,6 @@ export default function WardrobeList() {
           </div>
         </div>
       </AsyncState>
-    </main>
+    </div>
   );
 }

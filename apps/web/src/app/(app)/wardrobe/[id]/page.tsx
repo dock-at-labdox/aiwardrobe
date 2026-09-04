@@ -8,6 +8,7 @@ import type { ErrorEnvelope } from '@aiwardrobe/shared-web';
 import { ApiClient, AsyncState } from '@aiwardrobe/shared-web';
 
 import { Button } from '@/components/ui/button';
+import { getToken } from '@/lib/get-token';
 
 import type { WardrobeItem } from '../../../../features/wardrobe/mock-data';
 
@@ -23,7 +24,7 @@ export default function WardrobeDetailPage() {
   const [selectedColor, setSelectedColor] = useState('');
 
   useEffect(() => {
-    const apiClient = new ApiClient();
+    const apiClient = new ApiClient(undefined, { tokenProvider: getToken });
 
     apiClient
       .get<WardrobeItem>(`/v1/wardrobe/items/${params.id}`)
@@ -78,13 +79,6 @@ export default function WardrobeDetailPage() {
                 <div>
                   <h1 className="text-2xl font-bold">{item.name}</h1>
                   <p className="mt-1 text-sm text-gray-500">{item.category}</p>
-                  <Button
-                    type="button"
-                    onClick={() => router.push(`/try-on/${item.id}`)}
-                    className="w-full"
-                  >
-                    Try it on
-                  </Button>
                 </div>
 
                 <div className="rounded-lg border p-4">

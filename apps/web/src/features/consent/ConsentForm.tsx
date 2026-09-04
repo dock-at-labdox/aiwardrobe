@@ -21,9 +21,9 @@ export default function ConsentForm() {
     tryOn: false,
     analytics: false,
   });
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [saved, setSaved] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
 
   function handleToggle(purpose: keyof ConsentState) {
     setConsents((current) => ({
@@ -41,13 +41,10 @@ export default function ConsentForm() {
     setSaved(false);
 
     try {
-      // Backend API will be connected later.
-      // ApiClient + /v1/consents will be used here.
+      // Backend /v1/consents will be connected here.
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      console.log('Current consent state:', consents);
       setSaved(true);
-
       router.push('/onboarding');
     } catch {
       setError('Unable to save your consent settings. Please try again.');
