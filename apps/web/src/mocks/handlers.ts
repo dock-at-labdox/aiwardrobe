@@ -183,6 +183,45 @@ export const handlers = [
     return HttpResponse.json(wearEvent, { status: 201 });
   }),
 
+  // GET /v1/billing
+  http.get(`${BASE}/billing`, () => {
+    return HttpResponse.json({
+      plan: 'Free',
+      quota: {
+        used: 2,
+        limit: 5,
+        remaining: 3,
+        period: 'this month',
+      },
+    });
+  }),
+
+  // POST /v1/billing/checkout
+  http.post(`${BASE}/billing/checkout`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      plan?: string;
+    };
+
+    if (body.plan !== 'pro') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'INVALID_PLAN',
+            message: 'The selected plan is not available.',
+            correlation_id: crypto.randomUUID(),
+            retryable: false,
+          },
+        },
+        { status: 422 },
+      );
+    }
+
+    return HttpResponse.json({
+      status: 'success',
+      plan: 'Pro',
+      checkoutUrl: 'https://mock-checkout.local/session',
+    });
+  }),
   // POST /v1/tryon/requests
   http.post(`${BASE}/tryon/requests`, () => {
     return HttpResponse.json({
