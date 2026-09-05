@@ -1,9 +1,5 @@
-import ConsentForm from '../../../features/auth/ConsentForm';
+import ConsentForm from '@/features/consent/ConsentForm';
 
 export default function ConsentPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      <ConsentForm />
-    </main>
-  );
+  return <ConsentForm />;
 }

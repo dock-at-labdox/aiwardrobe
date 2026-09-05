@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
 import { Button } from '@/components/ui/button';
+import { getToken } from '@/lib/get-token';
 
 import type { RecommendationLook, RecommendationResult } from './mock-data';
 
@@ -18,10 +19,8 @@ export default function RecommendationResults({ resultId }: RecommendationResult
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ErrorEnvelope | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [refiningLookId, setRefiningLookId] = useState<string | null>(null);
-  const [substitutingLookId, setSubstitutingLookId] = useState<string | null>(null);
 
-  const apiClient = useMemo(() => new ApiClient(), []);
+  const apiClient = useMemo(() => new ApiClient(undefined, { tokenProvider: getToken }), []);
 
   useEffect(() => {
     apiClient
@@ -51,6 +50,7 @@ export default function RecommendationResults({ resultId }: RecommendationResult
       setActionMessage(`Unable to ${action} this look. Please try again.`);
     }
   };
+
   const conflicts =
     error?.error.code === 'CONSTRAINT_CONFLICT' && Array.isArray(error.error.details?.conflicts)
       ? error.error.details.conflicts
@@ -92,6 +92,7 @@ export default function RecommendationResults({ resultId }: RecommendationResult
           {actionMessage}
         </p>
       )}
+
       <AsyncState
         loading={loading}
         error={error}

@@ -10,6 +10,7 @@ import { Camera, CheckCircle2, Lightbulb, Shirt } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/get-token';
 
 type UploadSession = {
   uploadUrl: string;
@@ -22,7 +23,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 // Change to true when you want to test the low-confidence error state.
 const MOCK_LOW_COLOR_CONFIDENCE = false;
 
-const apiClient = new ApiClient('');
+const apiClient = new ApiClient('', { tokenProvider: getToken });
 
 function createErrorEnvelope(code: string, message: string): ErrorEnvelope {
   return {
@@ -160,7 +161,6 @@ export default function ItemCapture() {
 
   return (
     <div className="mx-auto w-full max-w-xl">
-      {/* Header */}
       <div className="mb-6 text-center sm:mb-8">
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
           <Shirt className="h-7 w-7 text-primary" aria-hidden="true" />
@@ -173,12 +173,10 @@ export default function ItemCapture() {
         </p>
       </div>
 
-      {/* Main Card */}
       <div className="rounded-2xl border bg-card p-4 shadow-sm sm:p-6">
         <AsyncState loading={isUploading} error={null} loadingMessage="Uploading your garment...">
           {!previewUrl ? (
             <>
-              {/* Upload Area */}
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
@@ -210,7 +208,6 @@ export default function ItemCapture() {
                 className="hidden"
               />
 
-              {/* Tips */}
               <div className="mt-4 rounded-xl border bg-muted/40 p-4">
                 <div className="flex gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background shadow-sm">
@@ -229,7 +226,6 @@ export default function ItemCapture() {
             </>
           ) : (
             <>
-              {/* Preview */}
               <div className="overflow-hidden rounded-xl border bg-muted/20">
                 <Image
                   src={previewUrl}
@@ -241,7 +237,6 @@ export default function ItemCapture() {
                 />
               </div>
 
-              {/* File Info */}
               {selectedFile && (
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border bg-muted/40 p-3">
                   <div className="min-w-0">
@@ -259,7 +254,6 @@ export default function ItemCapture() {
                 </div>
               )}
 
-              {/* Photo Feedback */}
               {feedback && (
                 <div className="mt-4 rounded-xl border bg-muted/40 p-4">
                   <div className="flex gap-3">
@@ -270,7 +264,6 @@ export default function ItemCapture() {
                 </div>
               )}
 
-              {/* Change Photo */}
               {!uploadSuccess && (
                 <Button
                   type="button"
@@ -286,7 +279,6 @@ export default function ItemCapture() {
           )}
         </AsyncState>
 
-        {/* Error retry */}
         {uploadError && selectedFile && !isUploading && (
           <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             <p className="font-semibold">Upload issue</p>
@@ -304,7 +296,6 @@ export default function ItemCapture() {
           </div>
         )}
 
-        {/* Success */}
         {uploadSuccess && !uploadError && (
           <div
             role="status"
@@ -341,7 +332,6 @@ export default function ItemCapture() {
           </div>
         )}
 
-        {/* Upload */}
         {previewUrl && !uploadSuccess && !uploadError && (
           <Button
             type="button"
@@ -353,7 +343,6 @@ export default function ItemCapture() {
           </Button>
         )}
 
-        {/* Validation error before upload */}
         {uploadError && !selectedFile && (
           <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             <p className="font-semibold">Upload issue</p>
