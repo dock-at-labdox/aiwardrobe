@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { Shirt, Calendar, User } from 'lucide-react';
-
+import { Shirt, Calendar, User, LogOut, BarChart3 } from 'lucide-react';
 const NAV_ITEMS = [
   { href: '/wardrobe', label: 'Wardrobe', icon: Shirt },
   { href: '/planner', label: 'Planner', icon: Calendar },
+  { href: '/insights', label: 'Insights', icon: BarChart3 },
   { href: '/profile', label: 'Profile', icon: User },
 ];
+const SIGN_OUT_CLASS =
+  'flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground';
 
 export default function ApplicationLayout({ children }: { children: ReactNode }) {
   return (
@@ -17,17 +19,24 @@ export default function ApplicationLayout({ children }: { children: ReactNode })
             AttireIQ
           </Link>
 
-          <nav className="hidden gap-6 sm:flex">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-6">
+            <nav className="hidden gap-6 sm:flex">
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <a href="/auth/logout" className={SIGN_OUT_CLASS}>
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Sign out</span>
+            </a>
+          </div>
         </div>
       </header>
 
