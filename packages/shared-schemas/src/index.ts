@@ -9,5 +9,6 @@ export interface ErrorEnvelope {
     message: string;
     correlation_id?: CorrelationId;
     details?: Record<string, unknown>;
+    retryable?: boolean;
   };
 }

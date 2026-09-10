@@ -4,6 +4,7 @@ import { AppProviders } from '@aiwardrobe/shared-web';
 import './globals.css';
 import { Geist } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import MswProvider from '@/mocks/MswProvider';
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -16,7 +17,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en" className={cn('font-sans', geist.variable)}>
       <body>
-        <AppProviders>{children}</AppProviders>
+        <MswProvider>
+          <AppProviders>{children}</AppProviders>
+        </MswProvider>
       </body>
     </html>
   );
