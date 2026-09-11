@@ -47,7 +47,10 @@
   },
   "pnpm": {
     "overrides": {
-      "postcss": "8.5.26"
+      "postcss": "8.5.26",
+      "fast-uri": ">=3.1.6 <4",
+      "js-yaml": ">=4.3.2 <5",
+      "multer": ">=2.3.0"
     }
   }
 }
