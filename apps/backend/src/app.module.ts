@@ -6,7 +6,8 @@ import { PlaceholderModulesModule } from './modules/placeholder-modules.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { IdentityConsentModule } from './modules/identity-consent/identity-consent.module';
 import { OccasionsModule } from './modules/occasions/occasions.module';
-
+import { WardrobeModule } from './modules/wardrobe/wardrobe.module';
+import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.module';
 @Module({
   imports: [
     ConfigModule,
@@ -16,6 +17,8 @@ import { OccasionsModule } from './modules/occasions/occasions.module';
     PlaceholderModulesModule,
     IdentityConsentModule,
     OccasionsModule,
+    WardrobeModule,
+    OutfitsPlannerModule,
   ],
 })
 export class AppModule {}
