@@ -21,6 +21,6 @@ import { ConsentController } from './api/consent.controller';
     GetCurrentUserService,
     ConsentService,
   ],
-  exports: [IDENTITY_PROVIDER, AuthGuard],
+  exports: [IDENTITY_PROVIDER, AuthGuard, GetCurrentUserService],
 })
 export class IdentityConsentModule {}
