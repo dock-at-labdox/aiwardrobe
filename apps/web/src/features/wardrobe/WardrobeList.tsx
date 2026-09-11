@@ -11,7 +11,7 @@ import { getToken } from '@/lib/get-token';
 
 import type { WardrobeItem } from './mock-data';
 
-const CATEGORIES = ['All', 'T-Shirt', 'Shirt', 'Jeans', 'Jacket', 'Dress'];
+const CATEGORIES = ['All', 'Tops', 'Bottoms', 'Outerwear', 'Footwear', 'Accessories'];
 const ROW_HEIGHT = 260;
 const COLUMN_COUNT = 4;
 

@@ -21,6 +21,12 @@ function lookItem(item: (typeof MOCK_WARDROBE_ITEMS)[number]) {
 }
 
 export const handlers = [
+  http.get('/api/token', () => {
+    return HttpResponse.json({ token: null });
+  }),
+
+  // existing handlers...
+
   // GET /v1/wardrobe/items
   http.get(`${BASE}/wardrobe/items`, () => {
     return HttpResponse.json({
