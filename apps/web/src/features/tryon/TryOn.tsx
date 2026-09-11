@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { ApiClient, AsyncState, type ErrorEnvelope } from '@aiwardrobe/shared-web';
 
+import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
 
 type TryOnProps = {
@@ -173,7 +175,7 @@ export default function TryOn({ itemId }: TryOnProps) {
 
       <AsyncState
         loading={loading}
-        error={null}
+        error={requestError}
         empty={false}
         loadingMessage="Generating your Try-On..."
       >
@@ -220,7 +222,9 @@ export default function TryOn({ itemId }: TryOnProps) {
                 </p>
 
                 <div className="mt-3 flex gap-2">
-                  <Button type="button">Upgrade</Button>
+                  <Link href="/billing">
+                    <Button type="button">Upgrade</Button>
+                  </Link>
 
                   <Button type="button" variant="outline" onClick={() => setRequestError(null)}>
                     Wait

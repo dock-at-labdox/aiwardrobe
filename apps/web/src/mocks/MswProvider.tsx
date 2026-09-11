@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from 'react';
 
+const SHOULD_MOCK = process.env.NEXT_PUBLIC_API_MOCKING === 'enabled';
+
 let started = false;
 
+// Mocking is opt-in via NEXT_PUBLIC_API_MOCKING=enabled, so we can turn it on
+// for the deployed demo and off once real endpoints land.
 export default function MswProvider({ children }: { children: React.ReactNode }) {
-  const [ready, setReady] = useState(false);
+  // Starts ready when mocking is off, so the app renders straight away.
+  const [ready, setReady] = useState(!SHOULD_MOCK || started);
 
   useEffect(() => {
-    const shouldMock =
-      process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_API_MOCKING !== 'disabled';
-
-    if (!shouldMock || started) {
-      return;
-    }
+    if (!SHOULD_MOCK || started) return;
 
     started = true;
 
@@ -22,7 +22,7 @@ export default function MswProvider({ children }: { children: React.ReactNode })
     });
   }, []);
 
-  if (!ready && process.env.NODE_ENV === 'development') return null;
+  if (!ready) return null;
 
   return <>{children}</>;
 }
