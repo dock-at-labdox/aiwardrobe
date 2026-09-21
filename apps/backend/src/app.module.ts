@@ -7,7 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { IdentityConsentModule } from './modules/identity-consent/identity-consent.module';
 import { WardrobeModule } from './modules/wardrobe/wardrobe.module';
 import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.module';
-
+import { BillingModule } from './modules/billing/billing.module';
 @Module({
   imports: [
     ConfigModule,
@@ -18,6 +18,7 @@ import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.
     IdentityConsentModule,
     WardrobeModule,
     OutfitsPlannerModule,
+    BillingModule,
   ],
 })
 export class AppModule {}
