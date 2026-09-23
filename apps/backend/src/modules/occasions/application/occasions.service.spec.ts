@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { OccasionType } from '@prisma/client';
+import { PrismaService } from '../../../prisma/prisma.service';
 import { OccasionsService } from './occasions.service';
 
 describe('OccasionsService', () => {
@@ -16,7 +17,7 @@ describe('OccasionsService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new OccasionsService(prisma as any);
+    service = new OccasionsService(prisma as unknown as PrismaService);
   });
 
   describe('create', () => {

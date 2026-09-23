@@ -1,9 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Request } from 'express';
 
 import { GetCurrentUserService } from '../../identity-consent/application/get-current-user.service';
+import { AuthenticatedIdentity } from '../../identity-consent/domain/identity-provider';
 import { AuthGuard } from '../../identity-consent/infrastructure/auth.guard';
 import { OccasionsService } from '../application/occasions.service';
 import { OccasionsController } from './occasions.controller';
+
+type AuthenticatedRequest = Request & {
+  user?: AuthenticatedIdentity;
+};
 
 describe('OccasionsController', () => {
   let controller: OccasionsController;
@@ -44,8 +50,8 @@ describe('OccasionsController', () => {
   });
 
   it('should use the authenticated user when finding an occasion', async () => {
-    const authenticatedIdentity = {
-      sub: 'auth0|user-123',
+    const authenticatedIdentity: AuthenticatedIdentity = {
+      providerSubjectId: 'auth0|user-123',
     };
 
     const authenticatedUser = {
@@ -62,7 +68,7 @@ describe('OccasionsController', () => {
 
     const request = {
       user: authenticatedIdentity,
-    } as any;
+    } as AuthenticatedRequest;
 
     await controller.findOne(request, occasionId);
 
