@@ -10,6 +10,7 @@ import { WardrobeModule } from './modules/wardrobe/wardrobe.module';
 import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+import { ProfilesModule } from './modules/profiles/profiles.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
     OutfitsPlannerModule,
     BillingModule,
     FeedbackModule,
+    ProfilesModule,
   ],
 })
 export class AppModule implements NestModule {
