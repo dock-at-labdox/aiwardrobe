@@ -11,6 +11,7 @@ import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.
 import { BillingModule } from './modules/billing/billing.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
+import { OccasionsModule } from './modules/occasions/occasions.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
     BillingModule,
     FeedbackModule,
     ProfilesModule,
+    OccasionsModule,
   ],
 })
 export class AppModule implements NestModule {
