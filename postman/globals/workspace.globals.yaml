@@ -1,0 +1,5 @@
+name: Globals
+values:
+  - key: client_secret_test
+    enabled: true
+    secret: true
