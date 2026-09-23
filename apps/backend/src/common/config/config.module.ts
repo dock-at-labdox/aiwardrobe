@@ -12,6 +12,8 @@ import * as Joi from 'joi';
           .default('development'),
         API_PORT: Joi.number().port().default(4000),
         OTEL_SERVICE_NAME: Joi.string().default('aiwardrobe-api'),
+        AUTH0_DOMAIN: Joi.string().required(),
+        AUTH0_AUDIENCE: Joi.string().uri().required(),
       }),
     }),
   ],
