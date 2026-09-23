@@ -1,10 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { CorrelatedRequest } from '../correlation/correlation.types';
 import { AppLogger } from '../logging/app.logger';
-
-interface RequestWithCorrelationId extends Request {
-  correlationId?: string;
-}
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -13,7 +10,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<RequestWithCorrelationId>();
+    const request = ctx.getRequest<CorrelatedRequest>();
     const correlationId = request?.correlationId;
 
     const status =

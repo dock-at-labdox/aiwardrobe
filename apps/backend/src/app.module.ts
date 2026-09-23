@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from './common/config/config.module';
+import { CorrelationMiddleware } from './common/correlation/correlation.middleware';
 import { LoggingModule } from './common/logging/logging.module';
 import { HealthModule } from './health/health.module';
 import { PlaceholderModulesModule } from './modules/placeholder-modules.module';
@@ -9,6 +10,7 @@ import { WardrobeModule } from './modules/wardrobe/wardrobe.module';
 import { OutfitsPlannerModule } from './modules/outfits-planner/outfits-planner.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
+
 @Module({
   imports: [
     ConfigModule,
@@ -23,4 +25,8 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
     FeedbackModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CorrelationMiddleware).forRoutes('*');
+  }
+}
