@@ -2,6 +2,7 @@
   "extends": "@aiwardrobe/shared-config/tsconfig.base.json",
   "compilerOptions": {
     "module": "commonjs",
+    "types": ["jest"],
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,

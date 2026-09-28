@@ -12,6 +12,7 @@ import { BillingModule } from './modules/billing/billing.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { OccasionsModule } from './modules/occasions/occasions.module';
+import { AuditModule } from './modules/audit/audit.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { OccasionsModule } from './modules/occasions/occasions.module';
     FeedbackModule,
     ProfilesModule,
     OccasionsModule,
+    AuditModule,
   ],
 })
 export class AppModule implements NestModule {
