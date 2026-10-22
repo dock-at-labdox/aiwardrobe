@@ -1,5 +1,5 @@
 import { AuditService } from './audit.service';
-import { AUDIT_REPOSITORY, AuditRepository } from '../domain/audit.repository';
+import { AuditRepository } from '../domain/audit.repository';
 
 describe('AuditService', () => {
   let service: AuditService;
