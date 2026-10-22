@@ -13,7 +13,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
 import { ProfilesModule } from './modules/profiles/profiles.module';
 import { OccasionsModule } from './modules/occasions/occasions.module';
 import { AuditModule } from './modules/audit/audit.module';
-
+import { MediaModule } from './modules/media/media.module';
 @Module({
   imports: [
     ConfigModule,
@@ -29,6 +29,7 @@ import { AuditModule } from './modules/audit/audit.module';
     ProfilesModule,
     OccasionsModule,
     AuditModule,
+    MediaModule,
   ],
 })
 export class AppModule implements NestModule {
