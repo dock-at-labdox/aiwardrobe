@@ -14,6 +14,8 @@ import { ProfilesModule } from './modules/profiles/profiles.module';
 import { OccasionsModule } from './modules/occasions/occasions.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module';
+import { IntegrationEventsModule } from './modules/integration-events/integration-events.module';
+import { MediaModule } from './modules/media/media.module';
 @Module({
   imports: [
     ConfigModule,
@@ -30,6 +32,8 @@ import { RecommendationsModule } from './modules/recommendations/recommendations
     OccasionsModule,
     AuditModule,
     RecommendationsModule,
+    IntegrationEventsModule,
+    MediaModule,
   ],
 })
 export class AppModule implements NestModule {
