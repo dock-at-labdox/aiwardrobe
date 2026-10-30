@@ -11,7 +11,7 @@
     "lint": "eslint src --max-warnings=0",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit",
-    "test": "jest --passWithNoTests"
+    "test": "jest"
   },
   "dependencies": {
     "@nestjs/common": "11.2.1",
